@@ -1,0 +1,39 @@
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\appsettings.Development.json
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\appsettings.json
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\presentation.staticwebassets.runtime.json
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\presentation.staticwebassets.endpoints.json
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\presentation.exe
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\presentation.deps.json
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\presentation.runtimeconfig.json
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\presentation.dll
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\presentation.pdb
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\business logic.dll
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\data access.dll
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\business logic.pdb
+C:\Users\Administrator\Desktop\Library System\presentaion\bin\Debug\net8.0\data access.pdb
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.csproj.AssemblyReference.cache
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.AssemblyInfoInputs.cache
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.AssemblyInfo.cs
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.RazorAssemblyInfo.cache
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.RazorAssemblyInfo.cs
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\scopedcss\bundle\presentation.styles.css
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\scopedcss\projectbundle\presentation.bundle.scp.css
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets.development.json
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets\msbuild.presentation.Microsoft.AspNetCore.StaticWebAssets.props
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets\msbuild.presentation.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets\msbuild.build.presentation.props
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.presentation.props
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.presentation.props
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\staticwebassets.pack.json
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presenta.D2D87D9E.Up2Date
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.dll
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\refint\presentation.dll
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.pdb
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\presentation.genruntimeconfig.cache
+C:\Users\Administrator\Desktop\Library System\presentaion\obj\Debug\net8.0\ref\presentation.dll

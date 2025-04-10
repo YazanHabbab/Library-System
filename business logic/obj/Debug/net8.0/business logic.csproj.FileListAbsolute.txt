@@ -1,0 +1,15 @@
+C:\Users\Administrator\Desktop\Library System\business logic\bin\Debug\net8.0\business logic.deps.json
+C:\Users\Administrator\Desktop\Library System\business logic\bin\Debug\net8.0\business logic.dll
+C:\Users\Administrator\Desktop\Library System\business logic\bin\Debug\net8.0\business logic.pdb
+C:\Users\Administrator\Desktop\Library System\business logic\bin\Debug\net8.0\data access.dll
+C:\Users\Administrator\Desktop\Library System\business logic\bin\Debug\net8.0\data access.pdb
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.csproj.AssemblyReference.cache
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.AssemblyInfoInputs.cache
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.AssemblyInfo.cs
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business.9089D43C.Up2Date
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.dll
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\refint\business logic.dll
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.pdb
+C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\ref\business logic.dll
