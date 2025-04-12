@@ -69,8 +69,7 @@ namespace data_access.Repositories
                         return new User
                         {
                             UserId = (int)reader["UserId"],
-                            Name = (string)reader["Name"],
-                            Password = (string)reader["HashedPassword"]
+                            Name = (string)reader["Name"]
                         };
                     }
                 }
@@ -85,7 +84,7 @@ namespace data_access.Repositories
         {
             using (var connection = _connectionHelper.CreateConnection())
             {
-                var command = new SqlCommand("SELECT * FROM Users WHERE Name = " + $"@Name", connection);
+                var command = new SqlCommand("SELECT * FROM Users WHERE Name " + $"@Name", connection);
 
                 SqlParameter IdParameter = new()
                 {
@@ -105,8 +104,7 @@ namespace data_access.Repositories
                         return new User
                         {
                             UserId = (int)reader["UserId"],
-                            Name = (string)reader["Name"],
-                            Password = (string)reader["HashedPassword"]
+                            Name = (string)reader["Name"]
                         };
                     }
                 }
@@ -157,6 +155,45 @@ namespace data_access.Repositories
 
                 await connection.CloseAsync();
                 return new ResultModel { Result = false, Message = "Could not create the user!" };
+            }
+        }
+
+        public async Task<ResultModel> CheckCredentials(User user)
+        {
+            if (string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrWhiteSpace(user.Password))
+                return new ResultModel { Result = false, Message = "Name and Password cannot be empty" };
+
+            using (var connection = _connectionHelper.CreateConnection())
+            {
+                var UpdateNamecommand = new SqlCommand("SELECT COUNT(1) FROM Users WHERE Name = @Name AND HashedPassword = @Password", connection);
+
+                SqlParameter NameParameter = new()
+                {
+                    ParameterName = "@Name",
+                    SqlDbType = System.Data.SqlDbType.VarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = user.Name
+                };
+                SqlParameter PasswordParameter = new()
+                {
+                    ParameterName = "@Password",
+                    SqlDbType = System.Data.SqlDbType.VarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = PasswordHasher.Hash(user.Password)
+                };
+                UpdateNamecommand.Parameters.Add(NameParameter);
+                UpdateNamecommand.Parameters.Add(PasswordParameter);
+
+                await connection.OpenAsync();
+
+                if (await UpdateNamecommand.ExecuteNonQueryAsync() > 0)
+                {
+                    await connection.CloseAsync();
+                    return new ResultModel { Result = true, Message = "User credentials are correct!" };
+                }
+
+                await connection.CloseAsync();
+                return new ResultModel { Result = false, Message = "User credentials are incorrect!" };
             }
         }
 

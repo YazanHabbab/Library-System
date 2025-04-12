@@ -14,6 +14,7 @@ namespace data_access.Interfaces
         Task<User> GetUserById(int Id);
         Task<User> GetUserByName(string Name);
         Task<ResultModel> CreateUser(User user);
+        Task<ResultModel> CheckCredentials(User user);
         Task<ResultModel> UpdateUser(UpdatedUser updatedUser, int UserId);
         Task<ResultModel> DeleteUser(int UserId);
     }

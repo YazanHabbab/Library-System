@@ -13,6 +13,7 @@ namespace data_access.Interfaces
         Task<Book> GetBookByISBN(string ISBN);
         Task<Book> GetBookByTitle(string title);
         Task<Book> GetBookByAuthor(string author);
+        Task<List<Book>> GetBooksByISBNOrTitleOrAuthor(string searchTerm);
         Task<List<BookBorrowing>> GetAllBorrowings();
         Task<List<BookBorrowing>> GetAllBorrowingsByUserId(int Id);
         Task<List<BookBorrowing>> GetAllBorrowingsByISBN(string ISBN);

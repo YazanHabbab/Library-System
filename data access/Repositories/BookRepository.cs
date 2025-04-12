@@ -159,6 +159,44 @@ namespace data_access.Repositories
             }
         }
 
+        public async Task<List<Book>> GetBooksByISBNOrTitleOrAuthor(string searchTerm)
+        {
+            var books = new List<Book>();
+            using (var connection = _connectionHelper.CreateConnection())
+            {
+                var command = new SqlCommand("SELECT * FROM Books WHERE ISBN LIKE @Term OR Title LIKE @Term OR Author LIKE @Term", connection);
+
+                SqlParameter TermParameter = new()
+                {
+                    ParameterName = "@Term",
+                    SqlDbType = System.Data.SqlDbType.VarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = $"%{searchTerm}%"
+                };
+                command.Parameters.Add(TermParameter);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        books.Add(new Book
+                        {
+                            ISBN = (string)reader["ISBN"],
+                            Title = (string)reader["Title"],
+                            Author = (string)reader["Author"],
+                            IsAvailable = (bool)reader["IsAvailable"],
+                        });
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                return books;
+            }
+        }
+
         public async Task<List<BookBorrowing>> GetAllBorrowings()
         {
             var borrowings = new List<BookBorrowing>();
