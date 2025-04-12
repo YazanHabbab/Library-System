@@ -9,3 +9,16 @@ C:\Users\Administrator\Desktop\Library System\data access\obj\Debug\net8.0\data 
 C:\Users\Administrator\Desktop\Library System\data access\obj\Debug\net8.0\refint\data access.dll
 C:\Users\Administrator\Desktop\Library System\data access\obj\Debug\net8.0\data access.pdb
 C:\Users\Administrator\Desktop\Library System\data access\obj\Debug\net8.0\ref\data access.dll
+c:\Users\Administrator\Desktop\Library-System\data access\bin\Debug\net8.0\data access.deps.json
+c:\Users\Administrator\Desktop\Library-System\data access\bin\Debug\net8.0\data access.dll
+c:\Users\Administrator\Desktop\Library-System\data access\bin\Debug\net8.0\data access.pdb
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.AssemblyInfoInputs.cache
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.AssemblyInfo.cs
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.csproj.CoreCompileInputs.cache
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.sourcelink.json
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.dll
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\refint\data access.dll
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.pdb
+c:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\ref\data access.dll
+C:\Users\Administrator\Desktop\Library-System\data access\obj\Debug\net8.0\data access.csproj.AssemblyReference.cache

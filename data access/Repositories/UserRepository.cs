@@ -1,0 +1,343 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using data_access.Helpers;
+using data_access.Interfaces;
+using data_access.Models;
+using data_access.Models.Other;
+using Microsoft.Data.SqlClient;
+using Testing.Models;
+
+namespace data_access.Repositories
+{
+    public class UserRepository : IUserRepository
+    {
+        private readonly SqlConnectionHelper _connectionHelper;
+
+        public UserRepository(SqlConnectionHelper connectionHelper)
+        {
+            _connectionHelper = connectionHelper;
+        }
+
+        public async Task<List<User>> GetAllUsers()
+        {
+            var users = new List<User>();
+            using (var connection = _connectionHelper.CreateConnection())
+            {
+                var command = new SqlCommand("SELECT * FROM Users", connection);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        users.Add(new User
+                        {
+                            UserId = (int)reader["UserId"],
+                            Name = (string)reader["Name"],
+                        });
+                    }
+                }
+                await connection.CloseAsync();
+            }
+            return users;
+        }
+
+        public async Task<User> GetUserById(int Id)
+        {
+            using (var connection = _connectionHelper.CreateConnection())
+            {
+                var command = new SqlCommand("SELECT * FROM Users WHERE UserId = " + $"@UserId", connection);
+
+                SqlParameter IdParameter = new()
+                {
+                    ParameterName = "@UserId",
+                    SqlDbType = System.Data.SqlDbType.Int,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = Id
+                };
+                command.Parameters.Add(IdParameter);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new User
+                        {
+                            UserId = (int)reader["UserId"],
+                            Name = (string)reader["Name"],
+                            Password = (string)reader["HashedPassword"]
+                        };
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                return null!;
+            }
+        }
+
+        public async Task<User> GetUserByName(string Name)
+        {
+            using (var connection = _connectionHelper.CreateConnection())
+            {
+                var command = new SqlCommand("SELECT * FROM Users WHERE Name = " + $"@Name", connection);
+
+                SqlParameter IdParameter = new()
+                {
+                    ParameterName = "@Name",
+                    SqlDbType = System.Data.SqlDbType.VarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = Name
+                };
+                command.Parameters.Add(IdParameter);
+
+                await connection.OpenAsync();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new User
+                        {
+                            UserId = (int)reader["UserId"],
+                            Name = (string)reader["Name"],
+                            Password = (string)reader["HashedPassword"]
+                        };
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                return null!;
+            }
+        }
+
+        public async Task<ResultModel> CreateUser(User user)
+        {
+            using (var connection = _connectionHelper.CreateConnection())
+            {
+                // Check if user name exists
+                if (await GetUserByName(user.Name) is not null)
+                    return new ResultModel { Result = false, Message = "This name is taken!" };
+
+                // Else if the user name does not exist then proceed to create a new user
+                var command = new SqlCommand("INSERT INTO Users (Name, HashedPassword) VALUES " + $"(@Name, @HashedPassword)", connection);
+
+                SqlParameter NameParameter = new()
+                {
+                    ParameterName = "@Name",
+                    SqlDbType = System.Data.SqlDbType.VarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = user.Name
+                };
+
+                SqlParameter PasswordParameter = new()
+                {
+                    ParameterName = "@HashedPassword",
+                    SqlDbType = System.Data.SqlDbType.VarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = PasswordHasher.Hash(user.Password)
+                };
+
+                command.Parameters.Add(NameParameter);
+                command.Parameters.Add(PasswordParameter);
+
+                await connection.OpenAsync();
+
+                if (await command.ExecuteNonQueryAsync() > 0)
+                {
+                    await connection.CloseAsync();
+                    return new ResultModel { Result = true, Message = "User created successfully!" };
+                }
+
+                await connection.CloseAsync();
+                return new ResultModel { Result = false, Message = "Could not create the user!" };
+            }
+        }
+
+        public async Task<ResultModel> UpdateUser(UpdatedUser updatedUser, int UserId)
+        {
+            var currentUser = await GetUserById(UserId);
+            if (currentUser is null)
+                return new ResultModel { Result = false, Message = "UserId is not correct!" };
+            else
+            {
+                var nameResult = await UpdateUserName(updatedUser.Name!, currentUser);
+                var passwordResult = await UpdateUserPassword(updatedUser.CurrentPassword!, updatedUser.NewPassword!, currentUser);
+
+                if (nameResult.Result is false && passwordResult.Result is false)
+                    return new ResultModel { Result = false, Message = nameResult.Message + ", " + passwordResult.Message };
+
+                else if (nameResult.Result is true && passwordResult.Result is true)
+                    return new ResultModel { Result = true, Message = nameResult.Message + ", " + passwordResult.Message };
+
+                else
+                    return new ResultModel { Result = false, Message = nameResult.Message + ", " + passwordResult.Message };
+            }
+        }
+
+        private async Task<ResultModel> UpdateUserName(string newName, User currentUser)
+        {
+            // Check name
+            if (string.IsNullOrWhiteSpace(newName))
+                return new ResultModel { Result = true };
+
+            else if (currentUser.Name == newName)
+                return new ResultModel { Result = false, Message = "Your current name and new name cannot be the same!" };
+
+            else if (await GetUserByName(newName) is not null)
+                return new ResultModel { Result = false, Message = "This name does exist!" };
+
+            else
+                currentUser.Name = newName;
+
+            // Update user name in the database
+            using (var connection = _connectionHelper.CreateConnection())
+            {
+                var UpdateNamecommand = new SqlCommand("UPDATE Users SET Name = @Name WHERE UserId = @UserId", connection);
+
+                SqlParameter IdParameter = new()
+                {
+                    ParameterName = "@UserId",
+                    SqlDbType = System.Data.SqlDbType.Int,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = currentUser.UserId
+                };
+                SqlParameter NameParameter = new()
+                {
+                    ParameterName = "@Name",
+                    SqlDbType = System.Data.SqlDbType.VarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = newName
+                };
+                UpdateNamecommand.Parameters.Add(NameParameter);
+                UpdateNamecommand.Parameters.Add(IdParameter);
+
+                await connection.OpenAsync();
+
+                if (await UpdateNamecommand.ExecuteNonQueryAsync() > 0)
+                {
+                    await connection.CloseAsync();
+                    return new ResultModel { Result = true, Message = "Name updated successfully!" };
+                }
+
+                await connection.CloseAsync();
+                return new ResultModel { Result = true };
+            }
+        }
+
+        private async Task<ResultModel> UpdateUserPassword(string currentPassword, string newPassword, User currentUser)
+        {
+            // Check password
+            if (string.IsNullOrWhiteSpace(currentPassword) && string.IsNullOrWhiteSpace(newPassword))
+                return new ResultModel { Result = true };
+
+            else if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+                return new ResultModel { Result = false, Message = "Please enter current password and new password" };
+
+            else if (currentPassword == newPassword)
+                return new ResultModel { Result = false, Message = "New password should not be the same as the current password!" };
+
+            else if (!PasswordHasher.Verify(currentPassword, currentUser.Password))
+                return new ResultModel { Result = false, Message = "Current password is not correct!" };
+
+            else if (string.IsNullOrWhiteSpace(newPassword))
+                return new ResultModel { Result = false, Message = "Please enter a valid new password!" };
+
+            else
+            {
+                using (var connection = _connectionHelper.CreateConnection())
+                {
+                    // Update the user password in the database
+                    var UpdatePasswordcommand = new SqlCommand("UPDATE Users SET HashedPassword = @Password WHERE UserId = @UserId", connection);
+
+                    SqlParameter IdParameter = new()
+                    {
+                        ParameterName = "@UserId",
+                        SqlDbType = System.Data.SqlDbType.Int,
+                        Direction = System.Data.ParameterDirection.Input,
+                        Value = currentUser.UserId
+                    };
+                    SqlParameter PasswordParameter = new()
+                    {
+                        ParameterName = "@Password",
+                        SqlDbType = System.Data.SqlDbType.VarChar,
+                        Direction = System.Data.ParameterDirection.Input,
+                        Value = PasswordHasher.Hash(newPassword)
+                    };
+                    UpdatePasswordcommand.Parameters.Add(IdParameter);
+                    UpdatePasswordcommand.Parameters.Add(PasswordParameter);
+
+                    await connection.OpenAsync();
+
+                    if (await UpdatePasswordcommand.ExecuteNonQueryAsync() > 0)
+                    {
+                        await connection.CloseAsync();
+                        return new ResultModel { Result = true, Message = "Password updated successfully!" };
+                    }
+
+                    await connection.CloseAsync();
+                    return new ResultModel { Result = true };
+                }
+            }
+        }
+
+        public async Task<ResultModel> DeleteUser(int UserId)
+        {
+            var currentUser = await GetUserById(UserId);
+            if (currentUser is null)
+                return new ResultModel { Result = false, Message = "User is not found!" };
+            else
+            {
+                using (var connection = _connectionHelper.CreateConnection())
+                {
+                    // Check if user deleted
+                    var checkCommand = new SqlCommand("SELECT * FROM Users WHERE IsActive = 0 AND UserId = " + $"@UserId", connection);
+
+                    SqlParameter IdParameter = new()
+                    {
+                        ParameterName = "@UserId",
+                        SqlDbType = System.Data.SqlDbType.Int,
+                        Direction = System.Data.ParameterDirection.Input,
+                        Value = UserId
+                    };
+                    checkCommand.Parameters.Add(IdParameter);
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await checkCommand.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                            return new ResultModel { Result = false, Message = "User is already deleted!" };
+
+                    }
+
+                    // Else delete the user
+                    var deleteCommand = new SqlCommand("UPDATE Users SET IsActive = 0 WHERE UserId = " + $"@UserId", connection);
+                    IdParameter = new()
+                    {
+                        ParameterName = "@UserId",
+                        SqlDbType = System.Data.SqlDbType.Int,
+                        Direction = System.Data.ParameterDirection.Input,
+                        Value = UserId
+                    };
+                    deleteCommand.Parameters.Add(IdParameter);
+
+                    if (await deleteCommand.ExecuteNonQueryAsync() > 0)
+                    {
+                        await connection.CloseAsync();
+                        return new ResultModel { Result = true, Message = "User deleted successfully!" };
+                    }
+
+                    await connection.CloseAsync();
+                    return new ResultModel { Result = false, Message = "Could not delete user!" };
+                }
+            }
+        }
+    }
+}

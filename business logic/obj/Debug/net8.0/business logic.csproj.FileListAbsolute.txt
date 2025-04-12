@@ -13,3 +13,19 @@ C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\bu
 C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\refint\business logic.dll
 C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\business logic.pdb
 C:\Users\Administrator\Desktop\Library System\business logic\obj\Debug\net8.0\ref\business logic.dll
+c:\Users\Administrator\Desktop\Library-System\business logic\bin\Debug\net8.0\business logic.deps.json
+c:\Users\Administrator\Desktop\Library-System\business logic\bin\Debug\net8.0\business logic.dll
+c:\Users\Administrator\Desktop\Library-System\business logic\bin\Debug\net8.0\business logic.pdb
+c:\Users\Administrator\Desktop\Library-System\business logic\bin\Debug\net8.0\data access.dll
+c:\Users\Administrator\Desktop\Library-System\business logic\bin\Debug\net8.0\data access.pdb
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.csproj.AssemblyReference.cache
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.AssemblyInfoInputs.cache
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.AssemblyInfo.cs
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.csproj.CoreCompileInputs.cache
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.sourcelink.json
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business.9089D43C.Up2Date
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.dll
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\refint\business logic.dll
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\business logic.pdb
+c:\Users\Administrator\Desktop\Library-System\business logic\obj\Debug\net8.0\ref\business logic.dll
