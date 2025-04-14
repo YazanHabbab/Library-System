@@ -7,7 +7,6 @@ using data_access.Interfaces;
 using data_access.Models;
 using data_access.Models.Other;
 using Microsoft.Data.SqlClient;
-using Testing.Models;
 
 namespace data_access.Repositories
 {
@@ -37,6 +36,7 @@ namespace data_access.Repositories
                         {
                             UserId = (int)reader["UserId"],
                             Name = (string)reader["Name"],
+                            IsActive = (bool)reader["IsActive"]
                         });
                     }
                 }
@@ -69,7 +69,9 @@ namespace data_access.Repositories
                         return new User
                         {
                             UserId = (int)reader["UserId"],
-                            Name = (string)reader["Name"]
+                            Name = (string)reader["Name"],
+                            Password = (string)reader["HashedPassword"],
+                            IsActive = (bool)reader["IsActive"]
                         };
                     }
                 }
@@ -84,7 +86,7 @@ namespace data_access.Repositories
         {
             using (var connection = _connectionHelper.CreateConnection())
             {
-                var command = new SqlCommand("SELECT * FROM Users WHERE Name " + $"@Name", connection);
+                var command = new SqlCommand("SELECT * FROM Users WHERE Name = " + $"@Name", connection);
 
                 SqlParameter IdParameter = new()
                 {
@@ -104,7 +106,9 @@ namespace data_access.Repositories
                         return new User
                         {
                             UserId = (int)reader["UserId"],
-                            Name = (string)reader["Name"]
+                            Name = (string)reader["Name"],
+                            Password = (string)reader["HashedPassword"],
+                            IsActive = (bool)reader["IsActive"]
                         };
                     }
                 }
@@ -124,7 +128,7 @@ namespace data_access.Repositories
                     return new ResultModel { Result = false, Message = "This name is taken!" };
 
                 // Else if the user name does not exist then proceed to create a new user
-                var command = new SqlCommand("INSERT INTO Users (Name, HashedPassword) VALUES " + $"(@Name, @HashedPassword)", connection);
+                var command = new SqlCommand("INSERT INTO Users (Name, HashedPassword, IsActive) VALUES " + $"(@Name, @HashedPassword, '1')", connection);
 
                 SqlParameter NameParameter = new()
                 {
@@ -155,45 +159,6 @@ namespace data_access.Repositories
 
                 await connection.CloseAsync();
                 return new ResultModel { Result = false, Message = "Could not create the user!" };
-            }
-        }
-
-        public async Task<ResultModel> CheckCredentials(User user)
-        {
-            if (string.IsNullOrWhiteSpace(user.Name) || string.IsNullOrWhiteSpace(user.Password))
-                return new ResultModel { Result = false, Message = "Name and Password cannot be empty" };
-
-            using (var connection = _connectionHelper.CreateConnection())
-            {
-                var UpdateNamecommand = new SqlCommand("SELECT COUNT(1) FROM Users WHERE Name = @Name AND HashedPassword = @Password", connection);
-
-                SqlParameter NameParameter = new()
-                {
-                    ParameterName = "@Name",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = user.Name
-                };
-                SqlParameter PasswordParameter = new()
-                {
-                    ParameterName = "@Password",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = PasswordHasher.Hash(user.Password)
-                };
-                UpdateNamecommand.Parameters.Add(NameParameter);
-                UpdateNamecommand.Parameters.Add(PasswordParameter);
-
-                await connection.OpenAsync();
-
-                if (await UpdateNamecommand.ExecuteNonQueryAsync() > 0)
-                {
-                    await connection.CloseAsync();
-                    return new ResultModel { Result = true, Message = "User credentials are correct!" };
-                }
-
-                await connection.CloseAsync();
-                return new ResultModel { Result = false, Message = "User credentials are incorrect!" };
             }
         }
 
@@ -373,6 +338,59 @@ namespace data_access.Repositories
 
                     await connection.CloseAsync();
                     return new ResultModel { Result = false, Message = "Could not delete user!" };
+                }
+            }
+        }
+
+        public async Task<ResultModel> ActivateUser(int UserId)
+        {
+            var currentUser = await GetUserById(UserId);
+            if (currentUser is null)
+                return new ResultModel { Result = false, Message = "User is not found!" };
+            else
+            {
+                using (var connection = _connectionHelper.CreateConnection())
+                {
+                    // Check if user not deleted
+                    var checkCommand = new SqlCommand("SELECT * FROM Users WHERE IsActive = 1 AND UserId = " + $"@UserId", connection);
+
+                    SqlParameter IdParameter = new()
+                    {
+                        ParameterName = "@UserId",
+                        SqlDbType = System.Data.SqlDbType.Int,
+                        Direction = System.Data.ParameterDirection.Input,
+                        Value = UserId
+                    };
+                    checkCommand.Parameters.Add(IdParameter);
+
+                    await connection.OpenAsync();
+
+                    using (var reader = await checkCommand.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                            return new ResultModel { Result = false, Message = "User is already activated!" };
+
+                    }
+
+                    // Else activate the user
+                    var deleteCommand = new SqlCommand("UPDATE Users SET IsActive = 1 WHERE UserId = " + $"@UserId", connection);
+                    IdParameter = new()
+                    {
+                        ParameterName = "@UserId",
+                        SqlDbType = System.Data.SqlDbType.Int,
+                        Direction = System.Data.ParameterDirection.Input,
+                        Value = UserId
+                    };
+                    deleteCommand.Parameters.Add(IdParameter);
+
+                    if (await deleteCommand.ExecuteNonQueryAsync() > 0)
+                    {
+                        await connection.CloseAsync();
+                        return new ResultModel { Result = true, Message = "User activated successfully!" };
+                    }
+
+                    await connection.CloseAsync();
+                    return new ResultModel { Result = false, Message = "Could not activate user!" };
                 }
             }
         }

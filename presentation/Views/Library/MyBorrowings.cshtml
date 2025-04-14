@@ -1,0 +1,75 @@
+@model business_logic.Models.UserBorrowingsVM;
+
+@{
+    ViewData["Title"] = "All Users Borrowings";
+}
+
+@if (Model.borrowings!.Any())
+{
+    <form asp-action="ReturnBooks" asp-controller="Library" method="post">
+        <div class="row col-md-12 col-md-offset-2 custyle" style="margin-top:10px">
+            <table class="table table-striped custab">
+                <thead>
+                    <tr class="bg-secondary text-white align-middle">
+                        <th class="text-center">ISBN</th>
+                        <th class="text-center">Title</th>
+                        <th class="text-center">Author</th>
+                        <th class="text-center">Borrow Date</th>
+                        <th class="text-center">Return Date</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                @foreach (var borrowing in Model.borrowings!)
+                {
+                    <tr class="align-middle text-center">
+                        <td>@borrowing.ISBN</td>
+                        <td>@Model.books!.FirstOrDefault(bo => bo.ISBN == borrowing.ISBN)!.Title</td>
+                        <td>@Model.books!.FirstOrDefault(bo => bo.ISBN == borrowing.ISBN)!.Author</td>
+                        <td>@borrowing.BorrowDate</td>
+                        <td>
+                            <span class="@(borrowing.ReturnDate is null ? "text-danger" : "text-success")">
+                                @(borrowing.ReturnDate is null ? "Not Returned" : borrowing.ReturnDate)</span>
+                        </td>
+                        <td>
+                            @if (borrowing.ReturnDate is null)
+                            {
+                                <input type="checkbox" class="return-checkbox" name="ISBNs" value="@borrowing.ISBN" />
+                            }
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+            <button id="return-button" type="submit" class="btn btn-success" style="display: none;">Return Selected
+                Books</button>
+        </div>
+    </form>
+}
+else
+{
+    <div class="text-center">
+        <h4>No Borrowings were found!</h4>
+    </div>
+}
+</div>
+
+@section Scripts
+{
+    <!--Client Side Validation Script-->
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkboxes = document.querySelectorAll('.return-checkbox');
+            const borrowButton = document.getElementById('return-button');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                    borrowButton.style.display = isAnyChecked ? 'block' : 'none';
+                });
+            });
+        });
+    </script>
+}

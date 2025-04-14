@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using business_logic.DTOs;
+using business_logic.Models;
+using data_access.Interfaces;
 using data_access.Models;
 using data_access.Models.Other;
 using data_access.Repositories;
@@ -11,13 +13,12 @@ namespace business_logic.Services
 {
     public class LibraryService
     {
-        private readonly BookRepository _bookRepo;
-        private readonly UserRepository _userRepo;
-
-        public LibraryService(BookRepository bookRepo, UserRepository userRepo)
+        private readonly IBookRepository _bookRepo;
+        private readonly AccountService _accountService;
+        public LibraryService(IBookRepository bookRepo, AccountService accountService)
         {
             _bookRepo = bookRepo;
-            _userRepo = userRepo;
+            _accountService = accountService;
         }
 
         public async Task<List<Book>> GetAllBooks()
@@ -25,9 +26,19 @@ namespace business_logic.Services
             return await _bookRepo.GetAllBooks();
         }
 
-        public async Task<List<Book>> SearchBooksByISBNOrTitleOrAuthor(string searchTerm = "")
+        public async Task<List<Book>> SearchBooksByISBNOrTitleOrAuthor(string searchTerm, bool availableOnly)
         {
-            return await _bookRepo.GetBooksByISBNOrTitleOrAuthor(searchTerm);
+            List<Book> books = new();
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                books = await GetAllBooks();
+
+            else if (!string.IsNullOrWhiteSpace(searchTerm))
+                books = await _bookRepo.GetBooksByISBNOrTitleOrAuthor(searchTerm);
+
+            if (availableOnly)
+                books = books.Where(b => b.IsAvailable == availableOnly).ToList();
+
+            return books.OrderBy(b => b.Title).ToList();
         }
 
         public async Task<List<BookBorrowing>> GetAllBorrowings()
@@ -45,6 +56,29 @@ namespace business_logic.Services
             return await _bookRepo.GetAllBorrowingsByISBN(ISBN);
         }
 
+        public async Task<BorrowingsVM> GetAllBorrowingsWithDetails()
+        {
+            BorrowingsVM borrowingsVM = new()
+            {
+                users = await _accountService.GetAllUsers(),
+                books = await GetAllBooks(),
+                borrowings = await GetAllBorrowings()
+            };
+
+            return borrowingsVM;
+        }
+
+        public async Task<UserBorrowingsVM> GetAllBorrowingsWithDetailsByUser(int UserId)
+        {
+            UserBorrowingsVM borrowingsVM = new()
+            {
+                books = await GetAllBooks(),
+                borrowings = await GetAllBorrowingsByUserId(UserId)
+            };
+
+            return borrowingsVM;
+        }
+
         public async Task<ResultModel> AddNewBook(BookDto bookDto)
         {
             if (string.IsNullOrWhiteSpace(bookDto.ISBN) || string.IsNullOrWhiteSpace(bookDto.Title) || string.IsNullOrWhiteSpace(bookDto.Author))
@@ -57,38 +91,38 @@ namespace business_logic.Services
             return new ResultModel { Result = false, Message = addResult.Message };
         }
 
-        public async Task<ResultModel> UpdateBookInfo(UpdatedBookDto updatedBookDto, string ISBN)
+        public async Task<ResultModel> UpdateBookInfo(UpdatedBookDto updatedBookDto)
         {
             if (string.IsNullOrWhiteSpace(updatedBookDto.Title) && string.IsNullOrWhiteSpace(updatedBookDto.Author))
                 return new ResultModel { Result = true, Message = "Nothing updated!" };
 
-            var updateResult = await _bookRepo.UpdateBook(new UpdatedBook { Title = updatedBookDto.Title, Author = updatedBookDto.Author }, ISBN);
+            var updateResult = await _bookRepo.UpdateBook(new UpdatedBook { Title = updatedBookDto.Title, Author = updatedBookDto.Author }, updatedBookDto.ISBN!);
             if (updateResult.Result)
                 return new ResultModel { Result = true, Message = "Book Info updated successfully!" };
 
             return new ResultModel { Result = false, Message = updateResult.Message };
         }
 
-        public async Task<ResultModel> BorrowBook(string ISBN, int UserId)
+        public async Task<ResultModel> BorrowBooks(List<string> ISBNs, int UserId)
         {
-            if(string.IsNullOrWhiteSpace(ISBN))
-                return new ResultModel { Result = false, Message = "ISBN is required!"};
+            if (!ISBNs.Any())
+                return new ResultModel { Result = false, Message = "at least one book is required!" };
 
-            var borrowResult = await _bookRepo.BorrowBook(ISBN, UserId);
+            var borrowResult = await _bookRepo.BorrowBooks(ISBNs, UserId);
             if (borrowResult.Result)
-                return new ResultModel { Result = true, Message = "Book is borrowed successfully!" };
+                return new ResultModel { Result = true, Message = "Books borrowed successfully!" };
 
             return new ResultModel { Result = false, Message = borrowResult.Message };
         }
 
-        public async Task<ResultModel> ReturnBook(string ISBN)
+        public async Task<ResultModel> ReturnBooks(List<string> ISBNs)
         {
-            if(string.IsNullOrWhiteSpace(ISBN))
-                return new ResultModel { Result = false, Message = "ISBN is required!"};
+            if (!ISBNs.Any())
+                return new ResultModel { Result = false, Message = "at least one book is required!" };
 
-            var returnResult = await _bookRepo.ReturnBook(ISBN);
+            var returnResult = await _bookRepo.ReturnBooks(ISBNs);
             if (returnResult.Result)
-                return new ResultModel { Result = true, Message = "Book is returned successfully!" };
+                return new ResultModel { Result = true, Message = "Books returned successfully!" };
 
             return new ResultModel { Result = false, Message = returnResult.Message };
         }

@@ -1,0 +1,28 @@
+@model business_logic.DTOs.UserLoginDto;
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<!--User Login Form-->
+<form class="col-6 mx-auto mt-5" asp-controller="Account" asp-action="Login" method="post">
+    <h2 class="text-primary">Login</h2>
+    <div class="mb-3">
+        <label for="Name" class="form-label">Name</label>
+        <input type="text" asp-for="Name" class="form-control" id="Name">
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label for="Password" class="form-label">Password</label>
+        <input type="password" asp-for="Password" class="form-control" id="Password">
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+@section Scripts
+{
+    <!--Client Side Validation Script-->
+    <partial name="_ValidationScriptsPartial" />
+}

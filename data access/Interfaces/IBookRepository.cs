@@ -19,7 +19,7 @@ namespace data_access.Interfaces
         Task<List<BookBorrowing>> GetAllBorrowingsByISBN(string ISBN);
         Task<ResultModel> AddBook(Book book);
         Task<ResultModel> UpdateBook(UpdatedBook updatedBook, string ISBN);
-        Task<ResultModel> BorrowBook(string ISBN, int UserId);
-        Task<ResultModel> ReturnBook(string ISBN);
+        Task<ResultModel> BorrowBooks(List<string> ISBNs, int UserId);
+        Task<ResultModel> ReturnBooks(List<string> ISBNs);
     }
 }

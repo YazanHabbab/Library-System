@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using data_access.Helpers;
@@ -169,8 +170,8 @@ namespace data_access.Repositories
                 SqlParameter TermParameter = new()
                 {
                     ParameterName = "@Term",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = $"%{searchTerm}%"
                 };
                 command.Parameters.Add(TermParameter);
@@ -179,7 +180,7 @@ namespace data_access.Repositories
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
-                    if (await reader.ReadAsync())
+                    while (await reader.ReadAsync())
                     {
                         books.Add(new Book
                         {
@@ -481,71 +482,87 @@ namespace data_access.Repositories
             }
         }
 
-        public async Task<ResultModel> BorrowBook(string ISBN, int UserId)
+        public async Task<ResultModel> BorrowBooks(List<string> ISBNs, int UserId)
         {
-            // Check if the book exists
-            if (await GetBookByISBN(ISBN) is null)
-                return new ResultModel { Result = false, Message = "ISBN is not correct!" };
-
-            // Check if the book is borrowed before
-            if (!await IsBookAvailable(ISBN))
-                return new ResultModel { Result = false, Message = "Cannot borrow book because it is borrowed!" };
-
             // Check if the user exists
             if (await _userRepository.GetUserById(UserId) is null)
                 return new ResultModel { Result = false, Message = "UserId is not correct" };
 
-            // Else proceed to borrow the book
+            // Define the table of data
+            var borrowingsTable = new DataTable();
+            borrowingsTable.Columns.Add("ISBN", typeof(string));
+            borrowingsTable.Columns.Add("UserId", typeof(int));
+            borrowingsTable.Columns.Add("BorrowDate", typeof(DateTime));
+
+            // Add rows to the book table
+            foreach (var ISBN in ISBNs)
+            {
+                // Check if the book exists
+                if (await GetBookByISBN(ISBN) is null)
+                    return new ResultModel { Result = false, Message = "one of the ISBNs is not correct!" };
+
+                // Check if the book is borrowed before
+                if (!await IsBookAvailable(ISBN))
+                    return new ResultModel { Result = false, Message = "Cannot borrow books because one of the books is not available!" };
+
+                // Proceed to adding the row
+                borrowingsTable.Rows.Add(ISBN, UserId, DateTime.Now);
+            }
+
+            // proceed to borrow the books
             using (var connection = _connectionHelper.CreateConnection())
             {
-                var AvailableCommand = new SqlCommand("UPDATE Books SET IsAvailable = 0 WHERE ISBN = @ISBN", connection);
-
-                SqlParameter ISBNParameter = new()
-                {
-                    ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = ISBN
-                };
-                AvailableCommand.Parameters.Add(ISBNParameter);
-
-                var BorrowingCommand = new SqlCommand("INSERT INTO Borrowings (ISBN, UserId, BorrowDate) VALUES " + $"(@ISBN, @UserId, @BorrowDate)", connection);
-
-                ISBNParameter = new()
-                {
-                    ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = ISBN
-                };
-
-                SqlParameter UserIdParameter = new()
-                {
-                    ParameterName = "@UserId",
-                    SqlDbType = System.Data.SqlDbType.Int,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = UserId
-                };
-
-                SqlParameter BorrowDateParameter = new()
-                {
-                    ParameterName = "@BorrowDate",
-                    SqlDbType = System.Data.SqlDbType.DateTime,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = DateTime.Now
-                };
-                BorrowingCommand.Parameters.AddRange(new[] { ISBNParameter, UserIdParameter, BorrowDateParameter });
-
                 await connection.OpenAsync();
-
-                if (await AvailableCommand.ExecuteNonQueryAsync() > 0 && await BorrowingCommand.ExecuteNonQueryAsync() > 0)
+                using (var transaction = (SqlTransaction)await connection.BeginTransactionAsync())
                 {
-                    await connection.CloseAsync();
-                    return new ResultModel { Result = true, Message = "Book borrowed successfully!" };
-                }
+                    try
+                    {
+                        // Update book availability
+                        var parameterPlaceholders = new List<string>();
+                        var parameters = new List<SqlParameter>();
 
-                await connection.CloseAsync();
-                return new ResultModel { Result = false, Message = "Could not borrow the book!" };
+                        for (int i = 0; i < ISBNs.Count; i++)
+                        {
+                            parameterPlaceholders.Add($"@ISBN{i}");
+                            parameters.Add(new SqlParameter($"@ISBN{i}", ISBNs[i]));
+                        }
+
+                        var updateCommand = new SqlCommand(
+                            $"UPDATE Books SET IsAvailable = 0 WHERE ISBN IN ({string.Join(",", parameterPlaceholders)})",
+                            connection,
+                            transaction);
+                        updateCommand.Parameters.AddRange(parameters.ToArray());
+
+                        int updatedRows = await updateCommand.ExecuteNonQueryAsync();
+                        if (updatedRows == 0)
+                        {
+                            await transaction.RollbackAsync();
+                            await connection.CloseAsync();
+                            return new ResultModel { Result = false, Message = "Could not update book availability!" };
+                        }
+
+                        // Insert borrowings using SqlBulkCopy
+                        using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction))
+                        {
+                            bulkCopy.DestinationTableName = "Borrowings";
+                            bulkCopy.ColumnMappings.Add("ISBN", "ISBN");
+                            bulkCopy.ColumnMappings.Add("UserId", "UserId");
+                            bulkCopy.ColumnMappings.Add("BorrowDate", "BorrowDate");
+
+                            await bulkCopy.WriteToServerAsync(borrowingsTable);
+                        }
+
+                        await transaction.CommitAsync();
+                        await connection.CloseAsync();
+                        return new ResultModel { Result = true, Message = "Books borrowed successfully!" };
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        await connection.CloseAsync();
+                        return new ResultModel { Result = false, Message = $"Error borrowing books: {ex.Message}" };
+                    }
+                }
             }
         }
 
@@ -558,8 +575,8 @@ namespace data_access.Repositories
                 SqlParameter ISBNParameter = new()
                 {
                     ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = ISBN
                 };
                 Command.Parameters.Add(ISBNParameter);
@@ -578,59 +595,89 @@ namespace data_access.Repositories
             return false;
         }
 
-        public async Task<ResultModel> ReturnBook(string ISBN)
+        public async Task<ResultModel> ReturnBooks(List<string> ISBNs)
         {
-            // Check if the book exists
-            if (await GetBookByISBN(ISBN) is null)
-                return new ResultModel { Result = false, Message = "ISBN is not correct!" };
+            // Add rows to the book table
+            foreach (var ISBN in ISBNs)
+            {
+                // Check if the book exists
+                if (await GetBookByISBN(ISBN) is null)
+                    return new ResultModel { Result = false, Message = "one of the ISBNs is not correct!" };
 
-            // Check if the book is already returned
-            if (await IsBookAvailable(ISBN))
-                return new ResultModel { Result = false, Message = "Cannot return book because it is already returned!" };
+                // Check if the book is returned before
+                if (await IsBookAvailable(ISBN))
+                    return new ResultModel { Result = false, Message = "Cannot return books because one of the books is already returned!" };
+            }
 
-            // Else proceed to borrow the book
+            // proceed to borrow the book
             using (var connection = _connectionHelper.CreateConnection())
             {
-                var AvailableCommand = new SqlCommand("UPDATE Books SET IsAvailable = 1 WHERE ISBN = @ISBN", connection);
-
-                SqlParameter ISBNParameter = new()
-                {
-                    ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = ISBN
-                };
-                AvailableCommand.Parameters.Add(ISBNParameter);
-
-                var ReturningCommand = new SqlCommand("UPDATE Borrowings SET ReturnDate = " + $"@ReturnDate WHERE ISBN = @ISBN", connection);
-
-                ISBNParameter = new()
-                {
-                    ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = ISBN
-                };
-
-                SqlParameter ReturnDateParameter = new()
-                {
-                    ParameterName = "@ReturnDate",
-                    SqlDbType = System.Data.SqlDbType.DateTime,
-                    Direction = System.Data.ParameterDirection.Input,
-                    Value = DateTime.Now
-                };
-                ReturningCommand.Parameters.AddRange(new[] { ISBNParameter, ReturnDateParameter });
-
                 await connection.OpenAsync();
-
-                if (await AvailableCommand.ExecuteNonQueryAsync() > 0 && await ReturningCommand.ExecuteNonQueryAsync() > 0)
+                using (var transaction = (SqlTransaction)await connection.BeginTransactionAsync())
                 {
-                    await connection.CloseAsync();
-                    return new ResultModel { Result = true, Message = "Book returned successfully!" };
-                }
+                    try
+                    {
+                        var parameterPlaceholders = new List<string>();
+                        var parameters = new List<SqlParameter>();
 
-                await connection.CloseAsync();
-                return new ResultModel { Result = false, Message = "Could not return the book!" };
+                        for (int i = 0; i < ISBNs.Count; i++)
+                        {
+                            parameterPlaceholders.Add($"@ISBN{i}");
+                            parameters.Add(new SqlParameter($"@ISBN{i}", ISBNs[i]));
+                        }
+
+                        var Command = new SqlCommand($"UPDATE Books SET IsAvailable = 1 WHERE ISBN IN ({string.Join(",", parameterPlaceholders)});" +
+                        "UPDATE Borrowings SET ReturnDate = " + $"@ReturnDate WHERE ReturnDate IS NULL AND ISBN IN ({string.Join(",", parameterPlaceholders)})", connection, transaction);
+
+                        Command.Parameters.AddRange(parameters.ToArray());
+                        Command.Parameters.Add(new SqlParameter
+                        {
+                            ParameterName = "@ReturnDate",
+                            SqlDbType = SqlDbType.DateTime,
+                            Direction = ParameterDirection.Input,
+                            Value = DateTime.Now
+                        });
+
+                        parameterPlaceholders = new List<string>();
+                        parameters = new List<SqlParameter>();
+
+                        for (int i = 0; i < ISBNs.Count; i++)
+                        {
+                            parameterPlaceholders.Add($"@ISBN{i}");
+                            parameters.Add(new SqlParameter($"@ISBN{i}", ISBNs[i]));
+                        }
+
+                        int updatedRows = await Command.ExecuteNonQueryAsync();
+                        if (updatedRows == 0)
+                        {
+                            await transaction.RollbackAsync();
+                            await connection.CloseAsync();
+                            return new ResultModel { Result = false, Message = "Could not return books!" };
+                        }
+
+                        await transaction.CommitAsync();
+                        await connection.CloseAsync();
+                        return new ResultModel { Result = true, Message = "Books returned successfully!" };
+
+                        // var ReturningCommand = new SqlCommand("UPDATE Borrowings SET ReturnDate = " + $"@ReturnDate WHERE ISBN IN ({string.Join(",", parameterPlaceholders)})", connection);
+
+                        // SqlParameter ReturnDateParameter = new()
+                        // {
+                        //     ParameterName = "@ReturnDate",
+                        //     SqlDbType = SqlDbType.DateTime,
+                        //     Direction = ParameterDirection.Input,
+                        //     Value = DateTime.Now
+                        // };
+                        // ReturningCommand.Parameters.Add(ReturnDateParameter);
+                        // ReturningCommand.Parameters.AddRange(parameters.ToArray());
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        await connection.CloseAsync();
+                        return new ResultModel { Result = false, Message = $"Error returning books: {ex.Message}" };
+                    }
+                }
             }
         }
     }

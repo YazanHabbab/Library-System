@@ -1,0 +1,101 @@
+@model List<data_access.Models.Book>;
+
+@{
+    ViewData["Title"] = "Browse Books";
+}
+
+<div class="container">
+    <div class="row col-md-6 text-center my-4">
+        <form asp-controller="Library" asp-action="AllBooks" method="get">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <input type="search" name="searchTerm" class="form-control" placeholder="Search a Book"
+                        value="@Context.Request.Query["searchTerm"]" />
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input type="checkbox" name="availableOnly" id="availableOnly" class="form-check-input"
+                            value="true" @(Context.Request.Query["availableOnly"] == "true" ? "checked" : "") />
+                        <label class="form-check-label" for="availableOnly">Available Only</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    @if (Model.Any())
+    {
+        <form asp-controller="Library" asp-action="AllBooks" method="get">
+            <div class="row col-md-12 col-md-offset-2 custyle" style="margin-top:10px">
+                <table class="table table-striped custab">
+                    <thead>
+                        <tr class="bg-secondary text-white">
+                            <th class="text-center">ISBN</th>
+                            <th class="text-center">Title</th>
+                            <th class="text-center">Author</th>
+                            <th class="text-center">Is Available</th>
+                            <th class="text-center">Borrow</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var book in Model)
+                        {
+                            <tr style="vertical-align:middle">
+                                <td class="text-center">@book.ISBN</td>
+                                <td class="text-center">@book.Title</td>
+                                <td class="text-center">@book.Author</td>
+                                <td class="text-center">
+                                    <span class="@(book.IsAvailable ? "text-success" : "text-danger")">
+                                        @(book.IsAvailable ? "Available" : "Not Available")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @if (book.IsAvailable)
+                                    {
+                                        <input type="checkbox" class="borrow-checkbox" name="ISBNs" value="@book.ISBN" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-end mt-3">
+                <button id="borrow-button" type="submit" class="btn btn-success" style="display: none;">Borrow Selected
+                    Books</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="text-center">
+            <h4>No users were found!</h4>
+        </div>
+    }
+</div>
+
+@section Scripts
+{
+    <!--Client Side Validation Script-->
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkboxes = document.querySelectorAll('.borrow-checkbox');
+            const borrowButton = document.getElementById('borrow-button');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                    borrowButton.style.display = isAnyChecked ? 'block' : 'none';
+                });
+            });
+        });
+    </script>
+}

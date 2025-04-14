@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using data_access.Models;
 using data_access.Models.Other;
-using Testing.Models;
 
 namespace data_access.Interfaces
 {
@@ -14,8 +13,8 @@ namespace data_access.Interfaces
         Task<User> GetUserById(int Id);
         Task<User> GetUserByName(string Name);
         Task<ResultModel> CreateUser(User user);
-        Task<ResultModel> CheckCredentials(User user);
         Task<ResultModel> UpdateUser(UpdatedUser updatedUser, int UserId);
         Task<ResultModel> DeleteUser(int UserId);
+        Task<ResultModel> ActivateUser(int UserId);
     }
 }

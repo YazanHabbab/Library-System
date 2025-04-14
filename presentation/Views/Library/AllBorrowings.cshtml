@@ -1,0 +1,44 @@
+@model business_logic.Models.BorrowingsVM;
+
+@{
+    ViewData["Title"] = "All Users Borrowings";
+}
+
+@if (Model.borrowings!.Any())
+{
+    <div class="row col-md-12 col-md-offset-2 custyle" style="margin-top:10px">
+        <table class="table table-striped custab">
+            <thead>
+                <tr class="bg-secondary text-white align-middle">
+                    <th class="text-center">Borrowing Id</th>
+                    <th class="text-center">ISBN</th>
+                    <th class="text-center">Title</th>
+                    <th class="text-center">User</th>
+                    <th class="text-center">Borrow Date</th>
+                    <th class="text-center">Return Date</th>
+                </tr>
+            </thead>
+            @foreach (var borrowing in Model.borrowings!)
+            {
+                <tr class="align-middle text-center">
+                    <td>@borrowing.BorrowingId</td>
+                    <td>@borrowing.ISBN</td>
+                    <td>@Model.books!.FirstOrDefault(bo => bo.ISBN == borrowing.ISBN)!.Title</td>
+                    <td>@borrowing.UserId - @Model.users!.FirstOrDefault(u => u.UserId == borrowing.UserId)!.Name</td>
+                    <td>@borrowing.BorrowDate</td>
+                    <td>
+                        <span class="@(borrowing.ReturnDate is null ? "text-danger" : "text-success")">
+                            @(borrowing.ReturnDate is null ? "Not Returned" : borrowing.ReturnDate)</span>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+else
+{
+    <div class="text-center">
+        <h4>No Borrowings were found!</h4>
+    </div>
+}
+</div>

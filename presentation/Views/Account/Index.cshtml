@@ -1,0 +1,77 @@
+@model List<data_access.Models.User>;
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="container">
+    <div class="row col-md-6 text-center my-4">
+        <form asp-controller="Account" asp-action="Index" method="get">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <input type="search" name="searchTerm" class="form-control" placeholder="Search a User"
+                        value="@Context.Request.Query["searchTerm"]" />
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="activeOnly" id="activeOnly" class="form-check-input" value="true"
+                        @(Context.Request.Query["activeOnly"] == "true" ? "checked" : "") />
+                        <label class="form-check-label" for="activeOnly">Active Only</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-secondary">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="row col-md-12 col-md-offset-2 custyle" style="margin-top:10px">
+            <table class="table table-striped custab">
+                <thead>
+                    <tr class="bg-secondary text-white">
+                        <th class="text-center">User Id</th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">Is Active</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                @foreach (var user in Model)
+                {
+                    <tr style="vertical-align:middle">
+                        <td class="text-center">@user.UserId</td>
+                        <td class="text-center">@user.Name</td>
+                        <td class="text-center">
+                            <span class="@(user.IsActive ? "text-success" : "text-danger")">
+                                @(user.IsActive ? "Active" : "Not Active")</span>
+                        </td>
+                        <td class="text-center">
+                            <span>
+                                @if (user.IsActive)
+                                {
+                                    <form asp-action="DeactivateAccount" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="ActivateAccount" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                                    </form>
+                                }
+                            </span>
+                    </tr>
+                }
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center">
+            <h4>No users were found!</h4>
+        </div>
+    }
+</div>

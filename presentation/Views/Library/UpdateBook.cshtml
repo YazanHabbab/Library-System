@@ -1,0 +1,29 @@
+@model business_logic.DTOs.UpdatedBookDto;
+
+@{
+    ViewData["Title"] = "Update Book";
+}
+
+<!--Book Info Update Form-->
+<form class="col-6 mx-auto mt-5" asp-controller="Library" asp-action="UpdateBook" method="post">
+    <h2 class="text-primary">Update Account Info</h2>
+    <div class="mb-3">
+        <label for="Title" class="form-label">New Title</label>
+        <input type="text" asp-for="Title" class="form-control" id="Title">
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label for="Author" class="form-label">New Author Name</label>
+        <input type="text" asp-for="Author" class="form-control" id="Author">
+        <span asp-validation-for="Author" class="text-danger"></span>
+    </div>
+    <input type="hidden" asp-for="ISBN" id="ISBN">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+@section Scripts
+{
+    <!--Client Side Validation Script-->
+    <partial name="_ValidationScriptsPartial" />
+}
