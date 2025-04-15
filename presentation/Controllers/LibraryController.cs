@@ -11,33 +11,15 @@ public class LibraryController : Controller
 {
     private readonly LibraryService _libraryService;
 
-    public LibraryController(LibraryService libraryService, AccountService accountSerivce)
+    public LibraryController(LibraryService libraryService)
     {
         _libraryService = libraryService;
     }
 
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> AllBooks(string searchTerm, bool availableOnly, List<string> ISBNs)
+    public async Task<IActionResult> AllBooks(string searchTerm, bool availableOnly)
     {
-        // If list of books were sent for borrowing
-        if (ISBNs.Count() > 0)
-        {
-            // Get the current logged in user Id
-            int UserId = int.Parse(User.FindFirst("UserId")!.Value);
-
-            var borrowResult = await _libraryService.BorrowBooks(ISBNs, UserId);
-            if (!borrowResult.Result)
-            {
-                return Content($"Could not borrow books because: {borrowResult.Message}");
-            }
-            else
-            {
-                TempData["Notification"] = "Books borrowed successfully!";
-                TempData["NotificationType"] = "success";
-            }
-        }
-
         // For searching books
         var books = await _libraryService.SearchBooksByISBNOrTitleOrAuthor(searchTerm, availableOnly);
         return View(books);
@@ -143,12 +125,37 @@ public class LibraryController : Controller
     }
 
     [Authorize]
+    public async Task<IActionResult> BorrowBooks(List<string> ISBNs)
+    {
+        // If list of books were sent for borrowing
+        if (ISBNs.Count() > 0)
+        {
+            // Get the current logged in user Id
+            int UserId = int.Parse(User.FindFirst("UserId")!.Value);
+
+            var borrowResult = await _libraryService.BorrowBooks(ISBNs, UserId);
+            if (!borrowResult.Result)
+            {
+                TempData["Notification"] = $"Could not borrow books: {borrowResult.Message}";
+                TempData["NotificationType"] = "error";
+            }
+            else
+            {
+                TempData["Notification"] = "Books borrowed successfully!";
+                TempData["NotificationType"] = "success";
+            }
+        }
+        return RedirectToAction("AllBooks", "Library");
+    }
+
+    [Authorize]
     public async Task<IActionResult> ReturnBooks(List<string> ISBNs)
     {
         var returnResult = await _libraryService.ReturnBooks(ISBNs);
         if (!returnResult.Result)
         {
-            return Content($"Could not return books because: {returnResult.Message}");
+            TempData["Notification"] = $"Could not return books because: {returnResult.Message}";
+            TempData["NotificationType"] = "error";
         }
         else
         {

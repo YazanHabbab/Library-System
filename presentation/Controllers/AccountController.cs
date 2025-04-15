@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using business_logic.DTOs;
 using business_logic.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace presentation.Controllers
 {
@@ -91,7 +85,7 @@ namespace presentation.Controllers
 
                     // Signning in the user
                     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    await HttpContext.SignInAsync(new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = false });
+                    await HttpContext.SignInAsync(new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(60) });
 
                     TempData["Notification"] = "Logged in successfully!";
                     TempData["NotificationType"] = "success";
@@ -117,7 +111,7 @@ namespace presentation.Controllers
         {
             TempData["Notification"] = "Logged out successfully!";
             TempData["NotificationType"] = "success";
-            
+
             await HttpContext.SignOutAsync();
             return RedirectToAction("Login", "Account");
         }
@@ -170,7 +164,8 @@ namespace presentation.Controllers
             var deleteResult = await _accountService.DeleteAccount(UserId);
             if (!deleteResult.Result)
             {
-                return Content($"Could not delete the account because: {deleteResult.Message}");
+                TempData["Notification"] = $"Could not delete the account: {deleteResult.Message}";
+                TempData["NotificationType"] = "error";
             }
             else
             {
@@ -187,10 +182,11 @@ namespace presentation.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> ActivateAccount(int UserId)
         {
-            var deleteResult = await _accountService.ActivateAccount(UserId);
-            if (!deleteResult.Result)
+            var activateResult = await _accountService.ActivateAccount(UserId);
+            if (!activateResult.Result)
             {
-                return Content($"Could not delete the account because: {deleteResult.Message}");
+                TempData["Notification"] = $"Could not activate the account: {activateResult.Message}";
+                TempData["NotificationType"] = "error";
             }
             else
             {
@@ -206,10 +202,11 @@ namespace presentation.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeactivateAccount(int UserId)
         {
-            var deleteResult = await _accountService.DeleteAccount(UserId);
-            if (!deleteResult.Result)
+            var deactivateResult = await _accountService.DeleteAccount(UserId);
+            if (!deactivateResult.Result)
             {
-                return Content($"Could not delete the account because: {deleteResult.Message}");
+                TempData["Notification"] = $"Could not deactivate the account: {deactivateResult.Message}";
+                TempData["NotificationType"] = "error";
             }
             else
             {

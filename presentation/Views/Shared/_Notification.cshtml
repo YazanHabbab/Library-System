@@ -1,6 +1,6 @@
 <head>
     <style>
- .notification-toast {
+.notification-toast {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -65,7 +65,7 @@
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 500);
-            }, 3000);
+            }, 5000);
             
             // Manual close
             toast.querySelector('.close-btn').addEventListener('click', () => {

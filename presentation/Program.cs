@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using business_logic.Services;
 using data_access.Helpers;
 using data_access.Interfaces;
@@ -36,9 +35,11 @@ builder.Services.AddAuthentication(options =>
     .AddCookie(options =>
     {
         options.Cookie.Name = "AuthenticationCookie";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-        options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     });
 
 // Add policy to allow only admin on specifc actions
