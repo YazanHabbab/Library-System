@@ -1,18 +1,20 @@
+@using System.Security.Claims
 @model List<data_access.Models.Book>;
 
 @{
     ViewData["Title"] = "Browse Books";
 }
 
+@* Search for books by ISBN, Title or author name *@
 <div class="container">
-    <div class="row col-md-6 text-center my-4">
+    <div class="row col-md-12 my-4 d-flex justify-content-center align-middle">
         <form asp-controller="Library" asp-action="AllBooks" method="get">
             <div class="row align-items-center">
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <input type="search" name="searchTerm" class="form-control" placeholder="Search a Book"
                         value="@Context.Request.Query["searchTerm"]" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <div class="form-check">
                         <input type="checkbox" name="availableOnly" id="availableOnly" class="form-check-input"
                             value="true" @(Context.Request.Query["availableOnly"] == "true" ? "checked" : "") />
@@ -20,11 +22,13 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary">Search</button>
+                    <button type="submit" class="btn btn-primary">Search</button>
                 </div>
             </div>
         </form>
     </div>
+
+    @* if there are any books then show them *@
     @if (Model.Any())
     {
         <form asp-controller="Library" asp-action="AllBooks" method="get">
@@ -43,7 +47,16 @@
                         @foreach (var book in Model)
                         {
                             <tr style="vertical-align:middle">
-                                <td class="text-center">@book.ISBN</td>
+                                @if (@User.FindFirst(ClaimTypes.Name)!.Value.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <td class="text-center">
+                                        @Html.ActionLink(book.ISBN, "UpdateBook", "Library", new { ISBN = book.ISBN })
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td class="text-center">@book.ISBN</td>
+                                }
                                 <td class="text-center">@book.Title</td>
                                 <td class="text-center">@book.Author</td>
                                 <td class="text-center">
@@ -85,6 +98,7 @@
     <!--Client Side Validation Script-->
     <partial name="_ValidationScriptsPartial" />
 
+@* To hide the search button if no book was selected *@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const checkboxes = document.querySelectorAll('.borrow-checkbox');

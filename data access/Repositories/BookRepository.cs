@@ -53,13 +53,13 @@ namespace data_access.Repositories
         {
             using (var connection = _connectionHelper.CreateConnection())
             {
-                var command = new SqlCommand("SELECT * FROM Books WHERE ISBN = " + $"@ISBN", connection);
+                var command = new SqlCommand("SELECT * FROM Books WHERE ISBN = @ISBN", connection);
 
                 SqlParameter ISBNParameter = new()
                 {
                     ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = ISBN
                 };
                 command.Parameters.Add(ISBNParameter);
@@ -90,13 +90,13 @@ namespace data_access.Repositories
         {
             using (var connection = _connectionHelper.CreateConnection())
             {
-                var command = new SqlCommand("SELECT * FROM Books WHERE Title = " + $"@Title", connection);
+                var command = new SqlCommand("SELECT * FROM Books WHERE Title = @Title", connection);
 
                 SqlParameter TitleParameter = new()
                 {
                     ParameterName = "@Title",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = title
                 };
                 command.Parameters.Add(TitleParameter);
@@ -127,13 +127,13 @@ namespace data_access.Repositories
         {
             using (var connection = _connectionHelper.CreateConnection())
             {
-                var command = new SqlCommand("SELECT * FROM Books WHERE Author = " + $"@Author", connection);
+                var command = new SqlCommand("SELECT * FROM Books WHERE Author = @Author", connection);
 
                 SqlParameter TitleParameter = new()
                 {
                     ParameterName = "@Author",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = author
                 };
                 command.Parameters.Add(TitleParameter);
@@ -160,6 +160,7 @@ namespace data_access.Repositories
             }
         }
 
+        // Search books with a serach term and return them
         public async Task<List<Book>> GetBooksByISBNOrTitleOrAuthor(string searchTerm)
         {
             var books = new List<Book>();
@@ -236,8 +237,8 @@ namespace data_access.Repositories
                 SqlParameter IdParameter = new()
                 {
                     ParameterName = "@UserId",
-                    SqlDbType = System.Data.SqlDbType.Int,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.Int,
+                    Direction = ParameterDirection.Input,
                     Value = Id
                 };
                 command.Parameters.Add(IdParameter);
@@ -273,8 +274,8 @@ namespace data_access.Repositories
                 SqlParameter ISBNParameter = new()
                 {
                     ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = ISBN
                 };
                 command.Parameters.Add(ISBNParameter);
@@ -318,32 +319,32 @@ namespace data_access.Repositories
                 SqlParameter ISBNParameter = new()
                 {
                     ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = book.ISBN
                 };
 
                 SqlParameter TitleParameter = new()
                 {
                     ParameterName = "@Title",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = book.Title
                 };
 
                 SqlParameter AuthorParameter = new()
                 {
                     ParameterName = "@Author",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = book.Author
                 };
 
                 SqlParameter IsAvailableParameter = new()
                 {
                     ParameterName = "@IsAvailable",
-                    SqlDbType = System.Data.SqlDbType.Bit,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.Bit,
+                    Direction = ParameterDirection.Input,
                     Value = book.IsAvailable
                 };
 
@@ -371,15 +372,21 @@ namespace data_access.Repositories
 
             else
             {
+                // Update the title
                 var titleResult = await UpdateBookTitle(updatedBook.Title!, currentBook);
+
+                // Update the author name
                 var authorResult = await UpdateBookAuthor(updatedBook.Author!, currentBook);
 
+                // Chcek If updating the title and author name failed
                 if (titleResult.Result is false && authorResult.Result is false)
                     return new ResultModel { Result = false, Message = titleResult.Message + ", " + authorResult.Message };
 
+                // Check if updating the title and author name succeded
                 else if (titleResult.Result is true && authorResult.Result is true)
                     return new ResultModel { Result = true, Message = titleResult.Message + ", " + authorResult.Message };
 
+                // Else something went wrong, Return the error message
                 else
                     return new ResultModel { Result = false, Message = titleResult.Message + ", " + authorResult.Message };
             }
@@ -391,9 +398,11 @@ namespace data_access.Repositories
             if (string.IsNullOrWhiteSpace(newTitle))
                 return new ResultModel { Result = true };
 
+            // Check if the current book title is the same as new title
             else if (currentBook.Title == newTitle)
                 return new ResultModel { Result = false, Message = "The current book title and new title cannot be the same!" };
 
+            // check if the book title does exist before
             else if (await GetBookByTitle(newTitle) is not null)
                 return new ResultModel { Result = false, Message = "This title does exist!" };
 
@@ -408,15 +417,15 @@ namespace data_access.Repositories
                 SqlParameter ISBNParameter = new()
                 {
                     ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = currentBook.ISBN
                 };
                 SqlParameter TitleParameter = new()
                 {
                     ParameterName = "@Title",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = newTitle
                 };
                 UpdateTitlecommand.Parameters.Add(ISBNParameter);
@@ -424,6 +433,7 @@ namespace data_access.Repositories
 
                 await connection.OpenAsync();
 
+                // Execute the command and check if it succeded
                 if (await UpdateTitlecommand.ExecuteNonQueryAsync() > 0)
                 {
                     await connection.CloseAsync();
@@ -437,10 +447,11 @@ namespace data_access.Repositories
 
         private async Task<ResultModel> UpdateBookAuthor(string newAuthor, Book currentBook)
         {
-            // Check Author
+            // Check Author name if empty
             if (string.IsNullOrWhiteSpace(newAuthor))
                 return new ResultModel { Result = true };
 
+            // Check Author name is the same as the new name
             else if (currentBook.Author == newAuthor)
                 return new ResultModel { Result = false, Message = "The current book author name and new author name cannot be the same!" };
 
@@ -455,15 +466,15 @@ namespace data_access.Repositories
                 SqlParameter ISBNParameter = new()
                 {
                     ParameterName = "@ISBN",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = currentBook.ISBN
                 };
                 SqlParameter AuthorParameter = new()
                 {
                     ParameterName = "@Author",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Direction = System.Data.ParameterDirection.Input,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
                     Value = newAuthor
                 };
                 UpdateTitlecommand.Parameters.Add(ISBNParameter);
@@ -471,6 +482,7 @@ namespace data_access.Repositories
 
                 await connection.OpenAsync();
 
+                // Execute the command and check if it succeded
                 if (await UpdateTitlecommand.ExecuteNonQueryAsync() > 0)
                 {
                     await connection.CloseAsync();
@@ -517,7 +529,7 @@ namespace data_access.Repositories
                 {
                     try
                     {
-                        // Update book availability
+                        // Try to update books availability
                         var parameterPlaceholders = new List<string>();
                         var parameters = new List<SqlParameter>();
 
@@ -533,6 +545,7 @@ namespace data_access.Repositories
                             transaction);
                         updateCommand.Parameters.AddRange(parameters.ToArray());
 
+                        // Execute the command and check if it succeded, If not do not update anything
                         int updatedRows = await updateCommand.ExecuteNonQueryAsync();
                         if (updatedRows == 0)
                         {
@@ -541,7 +554,7 @@ namespace data_access.Repositories
                             return new ResultModel { Result = false, Message = "Could not update book availability!" };
                         }
 
-                        // Insert borrowings using SqlBulkCopy
+                        // Insert all borrowings
                         using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction))
                         {
                             bulkCopy.DestinationTableName = "Borrowings";
@@ -556,6 +569,7 @@ namespace data_access.Repositories
                         await connection.CloseAsync();
                         return new ResultModel { Result = true, Message = "Books borrowed successfully!" };
                     }
+                    // If anything wrong happend rollback and do not update anything
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();
@@ -566,6 +580,7 @@ namespace data_access.Repositories
             }
         }
 
+        // Medthod to check if the book is available
         private async Task<bool> IsBookAvailable(string ISBN)
         {
             using (var connection = _connectionHelper.CreateConnection())
@@ -617,6 +632,7 @@ namespace data_access.Repositories
                 {
                     try
                     {
+                        // Try to update books availability
                         var parameterPlaceholders = new List<string>();
                         var parameters = new List<SqlParameter>();
 
@@ -647,6 +663,7 @@ namespace data_access.Repositories
                             parameters.Add(new SqlParameter($"@ISBN{i}", ISBNs[i]));
                         }
 
+                        // Execute command and check if it succeded, Else rollback and do not update anything
                         int updatedRows = await Command.ExecuteNonQueryAsync();
                         if (updatedRows == 0)
                         {
@@ -658,19 +675,9 @@ namespace data_access.Repositories
                         await transaction.CommitAsync();
                         await connection.CloseAsync();
                         return new ResultModel { Result = true, Message = "Books returned successfully!" };
-
-                        // var ReturningCommand = new SqlCommand("UPDATE Borrowings SET ReturnDate = " + $"@ReturnDate WHERE ISBN IN ({string.Join(",", parameterPlaceholders)})", connection);
-
-                        // SqlParameter ReturnDateParameter = new()
-                        // {
-                        //     ParameterName = "@ReturnDate",
-                        //     SqlDbType = SqlDbType.DateTime,
-                        //     Direction = ParameterDirection.Input,
-                        //     Value = DateTime.Now
-                        // };
-                        // ReturningCommand.Parameters.Add(ReturnDateParameter);
-                        // ReturningCommand.Parameters.AddRange(parameters.ToArray());
                     }
+
+                    // If something went wrong then rollback and do not update anything
                     catch (Exception ex)
                     {
                         await transaction.RollbackAsync();

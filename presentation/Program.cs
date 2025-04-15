@@ -23,8 +23,8 @@ builder.Services.AddSingleton<SqlConnectionHelper>(provider =>
 });
 
 // Add users and books repositories and services
-builder.Services.AddTransient<IUserRepository, UserRepository>();
-builder.Services.AddTransient<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<LibraryService>();
 
@@ -41,6 +41,7 @@ builder.Services.AddAuthentication(options =>
         options.Cookie.HttpOnly = true;
     });
 
+// Add policy to allow only admin on specifc actions
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireUserName("Admin"));
@@ -65,6 +66,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Library}/{action=Index}");
+    pattern: "{controller=Account}/{action=Login}");
 
 app.Run();

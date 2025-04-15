@@ -16,27 +16,35 @@ public class LibraryController : Controller
         _libraryService = libraryService;
     }
 
-    public IActionResult Index()
-    {
-        return View();
-    }
-
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> AllBooks(string searchTerm, bool availableOnly, List<string> ISBNs)
     {
+        // If list of books were sent for borrowing
         if (ISBNs.Count() > 0)
         {
+            // Get the current logged in user Id
             int UserId = int.Parse(User.FindFirst("UserId")!.Value);
+
             var borrowResult = await _libraryService.BorrowBooks(ISBNs, UserId);
             if (!borrowResult.Result)
+            {
                 return Content($"Could not borrow books because: {borrowResult.Message}");
+            }
+            else
+            {
+                TempData["Notification"] = "Books borrowed successfully!";
+                TempData["NotificationType"] = "success";
+            }
         }
 
+        // For searching books
         var books = await _libraryService.SearchBooksByISBNOrTitleOrAuthor(searchTerm, availableOnly);
         return View(books);
     }
 
+    // For admin only
+    // Show all users borrowings with details
     [Authorize(Policy = "AdminOnly")]
     [HttpGet]
     public async Task<IActionResult> AllBorrowings()
@@ -45,16 +53,20 @@ public class LibraryController : Controller
         return View(details);
     }
 
+    //  For showing current logged in user borrowings with details
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> MyBorrowings()
     {
+        // Get the logged in user Id
         int UserId = int.Parse(User.FindFirst("UserId")!.Value);
+
         var borrowings = await _libraryService.GetAllBorrowingsWithDetailsByUser(UserId);
 
         return View(borrowings);
     }
 
+    // For admin only
     [Authorize(Policy = "AdminOnly")]
     public IActionResult AddBook()
     {
@@ -62,6 +74,7 @@ public class LibraryController : Controller
         return View(bookModel);
     }
 
+    // For admin only
     [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     public async Task<IActionResult> AddBook(BookDto bookModel)
@@ -71,7 +84,9 @@ public class LibraryController : Controller
             var addResult = await _libraryService.AddNewBook(bookModel);
             if (addResult.Result)
             {
-                return RedirectToAction("Index", "Library");
+                TempData["Notification"] = "Book added successfully!";
+                TempData["NotificationType"] = "success";
+                return RedirectToAction("AllBooks", "Library");
             }
             else
             {
@@ -86,6 +101,7 @@ public class LibraryController : Controller
         }
     }
 
+    // For admin only
     [Authorize(Policy = "AdminOnly")]
     public IActionResult UpdateBook(string ISBN)
     {
@@ -96,6 +112,7 @@ public class LibraryController : Controller
         return View(updatedBook);
     }
 
+    // For admin only
     [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     public async Task<IActionResult> UpdateBook(UpdatedBookDto updatedBook)
@@ -108,7 +125,9 @@ public class LibraryController : Controller
             var updateResult = await _libraryService.UpdateBookInfo(updatedBook);
             if (updateResult.Result)
             {
-                return RedirectToAction("Index", "Library");
+                TempData["Notification"] = "Book updated successfully!";
+                TempData["NotificationType"] = "success";
+                return RedirectToAction("AllBooks", "Library");
             }
             else
             {
@@ -128,7 +147,14 @@ public class LibraryController : Controller
     {
         var returnResult = await _libraryService.ReturnBooks(ISBNs);
         if (!returnResult.Result)
+        {
             return Content($"Could not return books because: {returnResult.Message}");
+        }
+        else
+        {
+            TempData["Notification"] = "Books returned successfully!";
+            TempData["NotificationType"] = "success";
+        }
 
         return RedirectToAction("MyBorrowings");
     }

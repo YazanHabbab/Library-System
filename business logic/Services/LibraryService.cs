@@ -29,15 +29,19 @@ namespace business_logic.Services
         public async Task<List<Book>> SearchBooksByISBNOrTitleOrAuthor(string searchTerm, bool availableOnly)
         {
             List<Book> books = new();
+
             if (string.IsNullOrWhiteSpace(searchTerm))
                 books = await GetAllBooks();
 
+            // Filter books if search is not empty
             else if (!string.IsNullOrWhiteSpace(searchTerm))
                 books = await _bookRepo.GetBooksByISBNOrTitleOrAuthor(searchTerm);
 
+            // Get available books only
             if (availableOnly)
                 books = books.Where(b => b.IsAvailable == availableOnly).ToList();
 
+            // Order books by title
             return books.OrderBy(b => b.Title).ToList();
         }
 
@@ -56,6 +60,7 @@ namespace business_logic.Services
             return await _bookRepo.GetAllBorrowingsByISBN(ISBN);
         }
 
+        // Get all the books borrowings with details (users, books)
         public async Task<BorrowingsVM> GetAllBorrowingsWithDetails()
         {
             BorrowingsVM borrowingsVM = new()
@@ -68,6 +73,7 @@ namespace business_logic.Services
             return borrowingsVM;
         }
 
+        // Get all the books borrowings for specific user with details
         public async Task<UserBorrowingsVM> GetAllBorrowingsWithDetailsByUser(int UserId)
         {
             UserBorrowingsVM borrowingsVM = new()
@@ -81,6 +87,7 @@ namespace business_logic.Services
 
         public async Task<ResultModel> AddNewBook(BookDto bookDto)
         {
+            // Check if the book details are empty
             if (string.IsNullOrWhiteSpace(bookDto.ISBN) || string.IsNullOrWhiteSpace(bookDto.Title) || string.IsNullOrWhiteSpace(bookDto.Author))
                 return new ResultModel { Result = false, Message = "Please input ISBN, Title and Author!" };
 
@@ -93,6 +100,7 @@ namespace business_logic.Services
 
         public async Task<ResultModel> UpdateBookInfo(UpdatedBookDto updatedBookDto)
         {
+            // Check if the book details are empty then do not update anything
             if (string.IsNullOrWhiteSpace(updatedBookDto.Title) && string.IsNullOrWhiteSpace(updatedBookDto.Author))
                 return new ResultModel { Result = true, Message = "Nothing updated!" };
 
@@ -105,6 +113,7 @@ namespace business_logic.Services
 
         public async Task<ResultModel> BorrowBooks(List<string> ISBNs, int UserId)
         {
+            // Check if the there are any sent books, if not return false
             if (!ISBNs.Any())
                 return new ResultModel { Result = false, Message = "at least one book is required!" };
 
@@ -117,6 +126,7 @@ namespace business_logic.Services
 
         public async Task<ResultModel> ReturnBooks(List<string> ISBNs)
         {
+            // Check if the there are any sent books, if not return false
             if (!ISBNs.Any())
                 return new ResultModel { Result = false, Message = "at least one book is required!" };
 

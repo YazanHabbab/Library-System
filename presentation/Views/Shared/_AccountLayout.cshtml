@@ -1,0 +1,39 @@
+@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Library System</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/presentation.styles.css" asp-append-version="true" />
+</head>
+
+<header>
+    <nav
+        class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light .bg-primary bg-primary bg-gradient border-bottom box-shadow">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-white">Library System</a>
+        </div>
+    </nav>
+</header>
+
+<body>
+    <div class="container">
+        <main role="main" class="p-3 mt-5 align-middle" style="min-height: 475px;">
+            @RenderBody()
+        </main>
+    </div>
+
+    @* For notifications *@
+    <partial name="_Notification" />
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

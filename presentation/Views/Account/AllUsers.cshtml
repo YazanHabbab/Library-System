@@ -1,30 +1,33 @@
 @model List<data_access.Models.User>;
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "All Users";
 }
 
+@* Search Users by Id or name*@
 <div class="container">
-    <div class="row col-md-6 text-center my-4">
-        <form asp-controller="Account" asp-action="Index" method="get">
+    <div class="row col-md-12 my-4 d-flex justify-content-center align-middle">
+        <form asp-controller="Account" asp-action="AllUsers" method="get">
             <div class="row align-items-center">
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <input type="search" name="searchTerm" class="form-control" placeholder="Search a User"
                         value="@Context.Request.Query["searchTerm"]" />
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-check">
                         <input type="checkbox" name="activeOnly" id="activeOnly" class="form-check-input" value="true"
                         @(Context.Request.Query["activeOnly"] == "true" ? "checked" : "") />
                         <label class="form-check-label" for="activeOnly">Active Only</label>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-secondary">Search</button>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Search</button>
                 </div>
             </div>
         </form>
     </div>
+
+    @* If there any users then show them *@
     @if (Model.Any())
     {
         <div class="row col-md-12 col-md-offset-2 custyle" style="margin-top:10px">
@@ -48,14 +51,14 @@
                         </td>
                         <td class="text-center">
                             <span>
-                                @if (user.IsActive)
+                                @if (user.IsActive && !user.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form asp-action="DeactivateAccount" method="post" class="d-inline">
                                         <input type="hidden" name="userId" value="@user.UserId" />
                                         <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
                                     </form>
                                 }
-                                else
+                                else if(!user.Name.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <form asp-action="ActivateAccount" method="post" class="d-inline">
                                         <input type="hidden" name="userId" value="@user.UserId" />

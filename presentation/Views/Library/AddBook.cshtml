@@ -6,8 +6,8 @@
 
 <!--Adding Book Form-->
 <form class="col-6 mx-auto mt-5" asp-controller="Library" asp-action="AddBook" method="post">
-    <h2 class="text-primary">Add New Book</h2>
-        <div class="mb-3">
+    <h2 class="text-primary d-flex justify-content-center">Add New Book</h2>
+    <div class="mb-3">
         <label for="ISBN" class="form-label">ISBN</label>
         <input type="text" asp-for="ISBN" class="form-control" id="ISBN">
         <span asp-validation-for="ISBN" class="text-danger"></span>
@@ -23,7 +23,9 @@
         <span asp-validation-for="Author" class="text-danger"></span>
     </div>
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <button type="submit" class="btn btn-primary">Add</button>
+    <div class="d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Add</button>
+    </div>
 </form>
 
 @section Scripts

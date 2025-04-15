@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace data_access.Helpers
 {
+    // Sql Connection creation helper class
     public class SqlConnectionHelper
     {
         private readonly string _connectionString;

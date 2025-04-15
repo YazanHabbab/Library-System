@@ -40,6 +40,7 @@ namespace business_logic.Services
         {
             var users = await GetAllUsers();
 
+            // Search users by Id or name
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 users = users.Where(u =>
@@ -48,14 +49,17 @@ namespace business_logic.Services
                     .ToList();
             }
 
+            // Filter users to get only active ones
             if (activeOnly)
                 users = users.Where(u => u.IsActive == activeOnly).ToList();
 
+            // Order users by Id
             return users.OrderBy(u => u.UserId).ToList();
         }
 
         public async Task<ResultModel> CreateNewAccount(UserDto userDto)
         {
+            // check if the name and password are not empty
             if (string.IsNullOrWhiteSpace(userDto.Name) || string.IsNullOrWhiteSpace(userDto.Password))
                 return new ResultModel { Result = false, Message = "Please input both name and password!" };
 
@@ -68,16 +72,20 @@ namespace business_logic.Services
 
         public async Task<LoginAccountVM> LoginAccount(UserLoginDto userLoginDto)
         {
+            // check if the user name and password are not empty
             if (string.IsNullOrWhiteSpace(userLoginDto.Name) || string.IsNullOrWhiteSpace(userLoginDto.Password))
                 return new LoginAccountVM { Result = false, Message = "Name and Password are required!" };
 
+            // Check if the user exists
             var user = await _userRepo.GetUserByName(userLoginDto.Name);
             if (user is null)
                 return new LoginAccountVM { Result = false, Message = "Your Credentilas are not correct!" };
 
+            // Check if the user account is not active
             if (!user.IsActive)
                 return new LoginAccountVM { Result = false, Message = "Account is disabled!" };
 
+            // Check if the password is correct
             var checkResult = PasswordHasher.Verify(userLoginDto.Password, user.Password);
             if (checkResult)
                 return new LoginAccountVM { Result = true, Message = "Logged in successfully!", Name = user.Name, UserId = user.UserId };
@@ -87,6 +95,7 @@ namespace business_logic.Services
 
         public async Task<ResultModel> UpdateUserInfo(UpdatedUserDto updatedUser, int UserId)
         {
+            // check if the credentials are empty then do not update anything
             if (string.IsNullOrWhiteSpace(updatedUser.NewName) && string.IsNullOrWhiteSpace(updatedUser.CurrentPassword) && string.IsNullOrWhiteSpace(updatedUser.NewPassword))
                 return new ResultModel { Result = true, Message = "Nothing updated!" };
 
@@ -97,6 +106,7 @@ namespace business_logic.Services
             return new ResultModel { Result = false, Message = updateResult.Message };
         }
 
+        // Delete the user account (soft deletion or deactivate)
         public async Task<ResultModel> DeleteAccount(int UserId)
         {
             var deleteResult = await _userRepo.DeleteUser(UserId);
@@ -106,6 +116,7 @@ namespace business_logic.Services
             return new ResultModel { Result = false, Message = deleteResult.Message };
         }
 
+        // Activate user account if deactivated
         public async Task<ResultModel> ActivateAccount(int UserId)
         {
             var activateResult = await _userRepo.ActivateUser(UserId);

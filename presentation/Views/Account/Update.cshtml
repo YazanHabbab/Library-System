@@ -1,12 +1,15 @@
 @model business_logic.DTOs.UpdatedUserDto;
 
 @{
-    ViewData["Title"] = "Update";
+    ViewData["Title"] = "Update Account Info";
 }
 
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+
 <!--User Info Update Form-->
-<form class="col-6 mx-auto mt-5" asp-controller="Account" asp-action="Update" method="post">
-    <h2 class="text-primary">Update Account Info</h2>
+<form class="col-lg-6 mx-auto mt-5" asp-controller="Account" asp-action="Update" method="post">
     <div class="mb-3">
         <label for="Name" class="form-label">New Name</label>
         <input type="text" asp-for="NewName" class="form-control" id="NewName">
@@ -26,8 +29,34 @@
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 
+<div class="text-center position-absolute bottom-0 start-50 translate-middle-x">
+    <a id="deleteAccountLink" class="text-danger text-decoration-underline" href="#">Delete My Account</a>
+</div>
+
 @section Scripts
 {
     <!--Client Side Validation Script-->
     <partial name="_ValidationScriptsPartial" />
+
+    @* Alert to confirm the delete of the account *@
+    <script>
+        document.getElementById('deleteAccountLink').addEventListener('click', function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Are you sure?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, Delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '@Url.Action("DeleteAccount", "Account")';
+                }
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 }

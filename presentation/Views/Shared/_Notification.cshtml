@@ -1,0 +1,77 @@
+<head>
+    <style>
+ .notification-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #fff;
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(calc(100% + 20px));
+    transition: transform 0.5s ease-in-out;
+    z-index: 9999;
+    max-width: 300px;
+    border-left: 4px solid #4CAF50; /* Green border by default */
+}
+
+.notification-toast.show {
+    transform: translateX(0);
+}
+
+.notification-toast .toast-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notification-toast .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: 15px;
+    color: #888;
+}
+
+/* Different notification types */
+.notification-toast.success {
+    border-left-color: #4CAF50;
+}
+
+.notification-toast.error {
+    border-left-color: #F44336;
+}
+    </style>
+</head>
+
+@if (TempData["Notification"] != null)
+{
+    <div id="notification-toast" class="notification-toast @(TempData["NotificationType"] ?? "success")" role="alert">
+        <div class="toast-content">
+            <div class="message">@TempData["Notification"]</div>
+            <button type="button" class="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toast = document.getElementById('notification-toast');
+            
+            // Show the toast
+            toast.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+            
+            // Manual close
+            toast.querySelector('.close-btn').addEventListener('click', () => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            });
+        });
+    </script>
+}
