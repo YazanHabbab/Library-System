@@ -21,11 +21,14 @@ builder.Services.AddSingleton<SqlConnectionHelper>(provider =>
     return new SqlConnectionHelper(connectionString!);
 });
 
+
 // Add users and books repositories and services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<LibraryService>();
+
+builder.Services.AddLogging();
 
 builder.Services.AddAuthentication(options =>
 {

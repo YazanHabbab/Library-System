@@ -13,10 +13,6 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
-      "Id": "c:\\Users\\Administrator\\Desktop\\Library-System\\presentation\\wwwroot\\images\\eye.png",
-      "PackagePath": "staticwebassets\\images\\eye.png"
-    },
-    {
       "Id": "c:\\Users\\Administrator\\Desktop\\Library-System\\presentation\\wwwroot\\js\\site.js",
       "PackagePath": "staticwebassets\\js\\site.js"
     },

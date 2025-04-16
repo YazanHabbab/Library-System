@@ -31,8 +31,17 @@ public class LibraryController : Controller
     [HttpGet]
     public async Task<IActionResult> AllBorrowings()
     {
-        var details = await _libraryService.GetAllBorrowingsWithDetails();
-        return View(details);
+        try
+        {
+            var details = await _libraryService.GetAllBorrowingsWithDetails();
+            return View(details);
+        }
+        catch
+        {
+            TempData["Notification"] = "Server error, Try again later";
+            TempData["NotificationType"] = "error";
+            return RedirectToAction("Logout", "Account");
+        }
     }
 
     //  For showing current logged in user borrowings with details
@@ -43,9 +52,18 @@ public class LibraryController : Controller
         // Get the logged in user Id
         int UserId = int.Parse(User.FindFirst("UserId")!.Value);
 
-        var borrowings = await _libraryService.GetAllBorrowingsWithDetailsByUser(UserId);
+        try
+        {
+            var borrowings = await _libraryService.GetAllBorrowingsWithDetailsByUser(UserId);
 
-        return View(borrowings);
+            return View(borrowings);
+        }
+        catch
+        {
+            TempData["Notification"] = "Server error, Try again later";
+            TempData["NotificationType"] = "error";
+            return RedirectToAction("Logout", "Account");
+        }
     }
 
     // For admin only
@@ -63,17 +81,26 @@ public class LibraryController : Controller
     {
         if (ModelState.IsValid)
         {
-            var addResult = await _libraryService.AddNewBook(bookModel);
-            if (addResult.Result)
+            try
             {
-                TempData["Notification"] = "Book added successfully!";
-                TempData["NotificationType"] = "success";
-                return RedirectToAction("AllBooks", "Library");
+                var addResult = await _libraryService.AddNewBook(bookModel);
+                if (addResult.Result)
+                {
+                    TempData["Notification"] = "Book added successfully!";
+                    TempData["NotificationType"] = "success";
+                    return RedirectToAction("AllBooks", "Library");
+                }
+                else
+                {
+                    ModelState.AddModelError("", addResult.Message!);
+                    return View(bookModel);
+                }
             }
-            else
+            catch
             {
-                ModelState.AddModelError("", addResult.Message!);
-                return View(bookModel);
+                TempData["Notification"] = "Server error, Try again later";
+                TempData["NotificationType"] = "error";
+                return RedirectToAction("Logout", "Account");
             }
         }
         else
@@ -104,17 +131,26 @@ public class LibraryController : Controller
 
         if (ModelState.IsValid)
         {
-            var updateResult = await _libraryService.UpdateBookInfo(updatedBook);
-            if (updateResult.Result)
+            try
             {
-                TempData["Notification"] = "Book updated successfully!";
-                TempData["NotificationType"] = "success";
-                return RedirectToAction("AllBooks", "Library");
+                var updateResult = await _libraryService.UpdateBookInfo(updatedBook);
+                if (updateResult.Result)
+                {
+                    TempData["Notification"] = "Book updated successfully!";
+                    TempData["NotificationType"] = "success";
+                    return RedirectToAction("AllBooks", "Library");
+                }
+                else
+                {
+                    ModelState.AddModelError("", updateResult.Message!);
+                    return View(updatedBook);
+                }
             }
-            else
+            catch
             {
-                ModelState.AddModelError("", updateResult.Message!);
-                return View(updatedBook);
+                TempData["Notification"] = "Server error, Try again later";
+                TempData["NotificationType"] = "error";
+                return RedirectToAction("Logout", "Account");
             }
         }
         else
@@ -127,43 +163,61 @@ public class LibraryController : Controller
     [Authorize]
     public async Task<IActionResult> BorrowBooks(List<string> ISBNs)
     {
-        // If list of books were sent for borrowing
-        if (ISBNs.Count() > 0)
+        try
         {
-            // Get the current logged in user Id
-            int UserId = int.Parse(User.FindFirst("UserId")!.Value);
+            // If list of books were sent for borrowing
+            if (ISBNs.Count() > 0)
+            {
+                // Get the current logged in user Id
+                int UserId = int.Parse(User.FindFirst("UserId")!.Value);
 
-            var borrowResult = await _libraryService.BorrowBooks(ISBNs, UserId);
-            if (!borrowResult.Result)
-            {
-                TempData["Notification"] = $"Could not borrow books: {borrowResult.Message}";
-                TempData["NotificationType"] = "error";
+                var borrowResult = await _libraryService.BorrowBooks(ISBNs, UserId);
+                if (!borrowResult.Result)
+                {
+                    TempData["Notification"] = $"Could not borrow books: {borrowResult.Message}";
+                    TempData["NotificationType"] = "error";
+                }
+                else
+                {
+                    TempData["Notification"] = "Books borrowed successfully!";
+                    TempData["NotificationType"] = "success";
+                }
             }
-            else
-            {
-                TempData["Notification"] = "Books borrowed successfully!";
-                TempData["NotificationType"] = "success";
-            }
+            return RedirectToAction("AllBooks", "Library");
         }
-        return RedirectToAction("AllBooks", "Library");
+        catch
+        {
+            TempData["Notification"] = "Server error, Try again later";
+            TempData["NotificationType"] = "error";
+            return RedirectToAction("Logout", "Account");
+        }
     }
 
     [Authorize]
     public async Task<IActionResult> ReturnBooks(List<string> ISBNs)
     {
-        var returnResult = await _libraryService.ReturnBooks(ISBNs);
-        if (!returnResult.Result)
+        try
         {
-            TempData["Notification"] = $"Could not return books because: {returnResult.Message}";
-            TempData["NotificationType"] = "error";
-        }
-        else
-        {
-            TempData["Notification"] = "Books returned successfully!";
-            TempData["NotificationType"] = "success";
-        }
+            var returnResult = await _libraryService.ReturnBooks(ISBNs);
+            if (!returnResult.Result)
+            {
+                TempData["Notification"] = $"Could not return books because: {returnResult.Message}";
+                TempData["NotificationType"] = "error";
+            }
+            else
+            {
+                TempData["Notification"] = "Books returned successfully!";
+                TempData["NotificationType"] = "success";
+            }
 
-        return RedirectToAction("MyBorrowings");
+            return RedirectToAction("MyBorrowings");
+        }
+        catch
+        {
+            TempData["Notification"] = "Server error, Try again later";
+            TempData["NotificationType"] = "error";
+            return RedirectToAction("Logout", "Account");
+        }
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

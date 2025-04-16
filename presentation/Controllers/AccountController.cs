@@ -37,21 +37,30 @@ namespace presentation.Controllers
         {
             if (ModelState.IsValid)
             {
-                var createResult = await _accountService.CreateNewAccount(userRegisterModel);
-                if (createResult.Result)
+                try
                 {
-                    //if the creation of the account succeded then login directly
-                    await Login(new UserLoginDto
+                    var createResult = await _accountService.CreateNewAccount(userRegisterModel);
+                    if (createResult.Result)
                     {
-                        Name = userRegisterModel.Name,
-                        Password = userRegisterModel.Password
-                    });
-                    return RedirectToAction("AllBooks", "Library");
+                        //if the creation of the account succeded then login directly
+                        await Login(new UserLoginDto
+                        {
+                            Name = userRegisterModel.Name,
+                            Password = userRegisterModel.Password
+                        });
+                        return RedirectToAction("AllBooks", "Library");
+                    }
+                    else
+                    {
+                        // Return the error message if the creation failed
+                        ModelState.AddModelError("", createResult.Message!);
+                        return View(userRegisterModel);
+                    }
                 }
-                else
+                catch
                 {
-                    // Return the error message if the creation failed
-                    ModelState.AddModelError("", createResult.Message!);
+                    TempData["Notification"] = "Error Registering, Try again later";
+                    TempData["NotificationType"] = "error";
                     return View(userRegisterModel);
                 }
             }
@@ -73,28 +82,37 @@ namespace presentation.Controllers
         {
             if (ModelState.IsValid)
             {
-                var loginResult = await _accountService.LoginAccount(userLoginModel);
-                if (loginResult.Result)
+                try
                 {
-                    // Logging in the user and saving his credentials
-                    var claims = new List<Claim>
+                    var loginResult = await _accountService.LoginAccount(userLoginModel);
+                    if (loginResult.Result)
+                    {
+                        // Logging in the user and saving his credentials
+                        var claims = new List<Claim>
                     {
                         new Claim("UserId", loginResult.UserId.ToString()!),
                         new Claim(ClaimTypes.Name, loginResult.Name!)
                     };
 
-                    // Signning in the user
-                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    await HttpContext.SignInAsync(new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(60) });
+                        // Signning in the user
+                        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        await HttpContext.SignInAsync(new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(60) });
 
-                    TempData["Notification"] = "Logged in successfully!";
-                    TempData["NotificationType"] = "success";
+                        TempData["Notification"] = "Logged in successfully!";
+                        TempData["NotificationType"] = "success";
 
-                    return RedirectToAction("AllBooks", "Library");
+                        return RedirectToAction("AllBooks", "Library");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", loginResult.Message!);
+                        return View(userLoginModel);
+                    }
                 }
-                else
+                catch
                 {
-                    ModelState.AddModelError("", loginResult.Message!);
+                    TempData["Notification"] = "Error Logging in, Try again later";
+                    TempData["NotificationType"] = "error";
                     return View(userLoginModel);
                 }
             }
@@ -128,23 +146,32 @@ namespace presentation.Controllers
         {
             if (ModelState.IsValid)
             {
-                var updateResult = await _accountService.UpdateUserInfo(updatedUser, int.Parse(User.FindFirst("UserId")!.Value));
-                if (updateResult.Result)
+                try
                 {
-                    //For loginng in again after update
-                    await Login(new UserLoginDto
+                    var updateResult = await _accountService.UpdateUserInfo(updatedUser, int.Parse(User.FindFirst("UserId")!.Value));
+                    if (updateResult.Result)
                     {
-                        Name = updatedUser.NewName!,
-                        Password = updatedUser.NewPassword!
-                    });
+                        //For loginng in again after update
+                        await Login(new UserLoginDto
+                        {
+                            Name = updatedUser.NewName!,
+                            Password = updatedUser.NewPassword!
+                        });
 
-                    TempData["Notification"] = "Updated info successfully!";
-                    TempData["NotificationType"] = "success";
-                    return RedirectToAction("AllBooks", "Library");
+                        TempData["Notification"] = "Updated info successfully!";
+                        TempData["NotificationType"] = "success";
+                        return RedirectToAction("AllBooks", "Library");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", updateResult.Message!);
+                        return View(updatedUser);
+                    }
                 }
-                else
+                catch
                 {
-                    ModelState.AddModelError("", updateResult.Message!);
+                    TempData["Notification"] = "Error Logging in, Try again later";
+                    TempData["NotificationType"] = "error";
                     return View(updatedUser);
                 }
             }
@@ -161,16 +188,25 @@ namespace presentation.Controllers
             // Get the logged user Id
             var UserId = int.Parse(User.FindFirst("UserId")!.Value);
 
-            var deleteResult = await _accountService.DeleteAccount(UserId);
-            if (!deleteResult.Result)
+            try
             {
-                TempData["Notification"] = $"Could not delete the account: {deleteResult.Message}";
-                TempData["NotificationType"] = "error";
+                var deleteResult = await _accountService.DeleteAccount(UserId);
+                if (!deleteResult.Result)
+                {
+                    TempData["Notification"] = $"Could not delete the account: {deleteResult.Message}";
+                    TempData["NotificationType"] = "error";
+                }
+                else
+                {
+                    TempData["Notification"] = "Your account is deleted!";
+                    TempData["NotificationType"] = "error";
+                }
             }
-            else
+            catch
             {
-                TempData["Notification"] = "Your account is deleted!";
+                TempData["Notification"] = "Server error, Try again later";
                 TempData["NotificationType"] = "error";
+                return RedirectToAction("Update", "Account");
             }
 
             await HttpContext.SignOutAsync();
@@ -182,16 +218,24 @@ namespace presentation.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> ActivateAccount(int UserId)
         {
-            var activateResult = await _accountService.ActivateAccount(UserId);
-            if (!activateResult.Result)
+            try
             {
-                TempData["Notification"] = $"Could not activate the account: {activateResult.Message}";
-                TempData["NotificationType"] = "error";
+                var activateResult = await _accountService.ActivateAccount(UserId);
+                if (!activateResult.Result)
+                {
+                    TempData["Notification"] = $"Could not activate the account: {activateResult.Message}";
+                    TempData["NotificationType"] = "error";
+                }
+                else
+                {
+                    TempData["Notification"] = "Account is activated!";
+                    TempData["NotificationType"] = "success";
+                }
             }
-            else
+            catch
             {
-                TempData["Notification"] = "Account is activated!";
-                TempData["NotificationType"] = "success";
+                TempData["Notification"] = "Server error, Try again later";
+                TempData["NotificationType"] = "error";
             }
 
             return RedirectToAction("AllUsers", "Account");
@@ -202,15 +246,23 @@ namespace presentation.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeactivateAccount(int UserId)
         {
-            var deactivateResult = await _accountService.DeleteAccount(UserId);
-            if (!deactivateResult.Result)
+            try
             {
-                TempData["Notification"] = $"Could not deactivate the account: {deactivateResult.Message}";
-                TempData["NotificationType"] = "error";
+                var deactivateResult = await _accountService.DeleteAccount(UserId);
+                if (!deactivateResult.Result)
+                {
+                    TempData["Notification"] = $"Could not deactivate the account: {deactivateResult.Message}";
+                    TempData["NotificationType"] = "error";
+                }
+                else
+                {
+                    TempData["Notification"] = "Account is deactivated!";
+                    TempData["NotificationType"] = "error";
+                }
             }
-            else
+            catch
             {
-                TempData["Notification"] = "Account is deactivated!";
+                TempData["Notification"] = "Server error, Try again later";
                 TempData["NotificationType"] = "error";
             }
 

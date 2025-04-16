@@ -4,10 +4,10 @@ namespace business_logic.DTOs
 {
     public class UserLoginDto
     {
-        [Required, MinLength(3, ErrorMessage = "User name must be 3 letters at least")]
+        [Required, MinLength(3, ErrorMessage = "User name must be 3 letters at least"), MaxLength(30, ErrorMessage = "User name must be 30 letters at max.")]
         public string Name { get; set; }
 
-        [Required, DataType(DataType.Password), MinLength(6, ErrorMessage = "User password must be 6 letters at least")]
+        [Required, DataType(DataType.Password), MinLength(6, ErrorMessage = "User password must be 6 letters at least"), MaxLength(30, ErrorMessage = "Password must be 30 letters at max.")]
         public string Password { get; set; }
     }
 }
