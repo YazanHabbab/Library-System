@@ -61,7 +61,7 @@ namespace presentation.Controllers
                 {
                     TempData["Notification"] = "Error Registering, Try again later";
                     TempData["NotificationType"] = "error";
-                    return View(userRegisterModel);
+                    return RedirectToAction("Register", "Account");
                 }
             }
             else
@@ -113,7 +113,7 @@ namespace presentation.Controllers
                 {
                     TempData["Notification"] = "Error Logging in, Try again later";
                     TempData["NotificationType"] = "error";
-                    return View(userLoginModel);
+                    return RedirectToAction("Login", "Account");
                 }
             }
             else
@@ -148,15 +148,21 @@ namespace presentation.Controllers
             {
                 try
                 {
-                    var updateResult = await _accountService.UpdateUserInfo(updatedUser, int.Parse(User.FindFirst("UserId")!.Value));
+                    var UserId = int.Parse(User.FindFirst("UserId")!.Value);
+                    var updateResult = await _accountService.UpdateUserInfo(updatedUser, UserId);
                     if (updateResult.Result)
                     {
                         //For loginng in again after update
-                        await Login(new UserLoginDto
+                        var claims = new List<Claim>
                         {
-                            Name = updatedUser.NewName!,
-                            Password = updatedUser.NewPassword!
-                        });
+                            new Claim("UserId", UserId.ToString()),
+                            new Claim(ClaimTypes.Name, updatedUser.NewName!)
+                        };
+
+                        // Signning in the user
+                        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        await HttpContext.SignInAsync(new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(60) });
+
 
                         TempData["Notification"] = "Updated info successfully!";
                         TempData["NotificationType"] = "success";
@@ -172,7 +178,7 @@ namespace presentation.Controllers
                 {
                     TempData["Notification"] = "Error Logging in, Try again later";
                     TempData["NotificationType"] = "error";
-                    return View(updatedUser);
+                    return RedirectToAction("Logout", "Account");
                 }
             }
             else
@@ -206,11 +212,9 @@ namespace presentation.Controllers
             {
                 TempData["Notification"] = "Server error, Try again later";
                 TempData["NotificationType"] = "error";
-                return RedirectToAction("Update", "Account");
             }
 
-            await HttpContext.SignOutAsync();
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Logout", "Account");
         }
 
         // For admin only
@@ -236,6 +240,7 @@ namespace presentation.Controllers
             {
                 TempData["Notification"] = "Server error, Try again later";
                 TempData["NotificationType"] = "error";
+                return RedirectToAction("Logout", "Account");
             }
 
             return RedirectToAction("AllUsers", "Account");
@@ -264,6 +269,7 @@ namespace presentation.Controllers
             {
                 TempData["Notification"] = "Server error, Try again later";
                 TempData["NotificationType"] = "error";
+                return RedirectToAction("Logout", "Account");
             }
 
             return RedirectToAction("AllUsers", "Account");

@@ -16,6 +16,11 @@ namespace business_logic.Services
             _accountService = accountService;
         }
 
+        public async Task<Book> GetBookByISBN(string ISBN)
+        {
+            return await _bookRepo.GetBookByISBN(ISBN);
+        }
+
         public async Task<List<Book>> GetAllBooks()
         {
             return await _bookRepo.GetAllBooks();

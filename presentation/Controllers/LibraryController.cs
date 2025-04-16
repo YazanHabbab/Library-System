@@ -112,13 +112,36 @@ public class LibraryController : Controller
 
     // For admin only
     [Authorize(Policy = "AdminOnly")]
-    public IActionResult UpdateBook(string ISBN)
+    public async Task<IActionResult> UpdateBookAsync(string ISBN)
     {
         if (string.IsNullOrWhiteSpace(ISBN))
-            return NotFound("Book with this ISBN is not found!");
+        {
+            TempData["Notification"] = "Book with this ISBN is not found";
+            TempData["NotificationType"] = "error";
+            return RedirectToAction("AllBooks", "Library");
+        }
+        else
+        {
+            try
+            {
+                var book = await _libraryService.GetBookByISBN(ISBN);
+                if (book is null)
+                {
+                    TempData["Notification"] = "Book with this ISBN is not found";
+                    TempData["NotificationType"] = "error";
+                    return RedirectToAction("AllBooks", "Library");
+                }
 
-        UpdatedBookDto updatedBook = new() { ISBN = ISBN };
-        return View(updatedBook);
+                UpdatedBookDto updatedBook = new() { ISBN = ISBN, Author = book.Author, Title = book.Title };
+                return View(updatedBook);
+            }
+            catch
+            {
+                TempData["Notification"] = "Server error, Try again later";
+                TempData["NotificationType"] = "error";
+                return RedirectToAction("Logout", "Account");
+            }
+        }
     }
 
     // For admin only

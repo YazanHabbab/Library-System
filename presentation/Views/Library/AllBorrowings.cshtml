@@ -24,6 +24,7 @@
                     <td>@borrowing.BorrowingId</td>
                     <td>@borrowing.ISBN</td>
                     <td>@Model.books!.FirstOrDefault(bo => bo.ISBN == borrowing.ISBN)!.Title</td>
+                    <td>@Model.users!.FirstOrDefault(u => u.UserId == borrowing.UserId)!.Name</td>
                     <td>@borrowing.BorrowDate</td>
                     <td>
                         <span class="@(borrowing.ReturnDate is null ? "text-danger" : "text-success")">

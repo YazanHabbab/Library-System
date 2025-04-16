@@ -27,30 +27,32 @@
                         <ul class="navbar-nav flex-grow-1">
                             @if (User.Identity!.IsAuthenticated)
                             {
+                                <li class="nav-item">
+                                    <a class=" nav-link text-white" id="allbooks" asp-controller="Library"
+                                        asp-action="AllBooks" data-nav-link>Browse</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-white" id="myborrowings" asp-controller="Library"
+                                        asp-action="MyBorrowings" data-nav-link>Borrowings</a>
+                                </li>
                                 @if (@User.FindFirst(ClaimTypes.Name)!.Value.Equals("Admin",
-                                StringComparison.OrdinalIgnoreCase))
+                               StringComparison.OrdinalIgnoreCase))
                                 {
                                     <li class="nav-item">
-                                        <a class="nav-link text-white" asp-controller="Account" asp-action="AllUsers">All
-                                            Users</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-white" asp-controller="Library" asp-action="AllBorrowings">All
-                                            Users
-                                            Borrowings</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-white" asp-controller="Library" asp-action="AddBook">Add a
+                                        <a class="nav-link text-white" id="addbook" asp-controller="Library"
+                                            asp-action="AddBook" data-nav-link>Add
                                             Book</a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white" id="users" asp-controller="Account" asp-action="AllUsers"
+                                            data-nav-link>Users</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white" id="allborrowings" asp-controller="Library"
+                                            asp-action="AllBorrowings" data-nav-link>Users
+                                            Borrowings</a>
+                                    </li>
                                 }
-                                <li class="nav-item">
-                                    <a class="nav-link text-white" asp-controller="Library" asp-action="AllBooks">Browse</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-white" asp-controller="Library" asp-action="MyBorrowings">My
-                                        Borrowings</a>
-                                </li>
                             }
                         </ul>
                     </div>
@@ -58,11 +60,11 @@
                         <ul class="navbar-nav flex-grow-1">
                             @if (User.Identity!.IsAuthenticated)
                             {
-                                <li class="nav-item">
+                                <li class="nav-item" id="account" onclick="setActiveNavLink('account')">
                                     <a class="nav-link text-white" asp-controller="Account"
                                         asp-action="Update">@User.FindFirst(ClaimTypes.Name)!.Value</a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" id="logout" onclick="setActiveNavLink('logout')">
                                     <a class="nav-link text-white" asp-controller="Account" asp-action="Logout">Logout</a>
                                 </li>
                             }
@@ -88,7 +90,36 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false);
 </body>
+
+@* For active link *@
+<script>
+    // Highlight active nav item based on current page
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        navLinks.forEach(link => {
+            const linkPath = link.getAttribute('href');
+
+            // Remove trailing slashes for consistent comparison
+            const normalizedCurrent = currentPath.replace(/\/$/, "");
+            const normalizedLink = linkPath.replace(/\/$/, "");
+
+            // Check if link matches current path
+            if (normalizedCurrent === normalizedLink ||
+                (normalizedLink !== "" && normalizedCurrent.startsWith(normalizedLink))) {
+                link.classList.add('active');
+            }
+
+            // Optional: Add click handler to update immediately
+            link.addEventListener('click', function () {
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    });
+</script>
 
 </html>
